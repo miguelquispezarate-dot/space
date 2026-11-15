@@ -1,0 +1,3175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#030712">
+  <meta name="author" content="NASA Educational Science Division">
+  <meta name="description" content="Photorealistic Interactive Visual Encyclopedia of NASA Space Exploration and Planetary Archaeology for Students">
+  <title>NASA Explorer // Photorealistic Visual Encyclopedia</title>
+
+  <style>
+    /* ==========================================================================
+       1. VARIABLES AND AEROSPACE PHOTOREALISTIC DESIGN SYSTEM
+       ========================================================================== */
+    :root {
+      /* Cosmos & Titanium Palette (Zero generic neons) */
+      --cosmos-deep: #030611;
+      --cosmos-void: #010308;
+      --cosmos-card: rgba(10, 18, 36, 0.88);
+      --titanium-base: #0f172a;
+      --titanium-panel: rgba(15, 23, 42, 0.92);
+      --titanium-border: rgba(148, 163, 184, 0.24);
+      --titanium-light: #94a3b8;
+      
+      /* Aerospace Instrumentation Accents: Kapton/Mylar Gold and NASA Blue */
+      --gold-foil: #f59e0b;
+      --gold-foil-bright: #fbbf24;
+      --gold-glow: rgba(245, 158, 11, 0.28);
+      --gold-dark: #78350f;
+      --nasa-blue: #0b3d91;
+      --nasa-blue-glow: rgba(11, 61, 145, 0.4);
+      --nasa-red: #ea3943;
+      
+      /* Typography & Text */
+      --text-white: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: 'SF Mono', 'Consolas', 'JetBrains Mono', 'Courier New', monospace;
+
+      /* Mobile-First Touch Targets */
+      --touch-size: 48px;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-left: env(safe-area-inset-left, 0px);
+      --safe-right: env(safe-area-inset-right, 0px);
+
+      --trans-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: var(--cosmos-void);
+      color: var(--text-white);
+      font-family: var(--font-sans);
+      font-size: 14.5px;
+      line-height: 1.45;
+      touch-action: none;
+    }
+
+    /* Clean instrumentation scrollbars */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(3, 6, 17, 0.8);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.3);
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--gold-foil);
+    }
+
+    #app-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    /* Screen Views */
+    .screen-view {
+      position: absolute;
+      inset: 0;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.5s var(--trans-smooth), transform 0.5s var(--trans-smooth);
+      pointer-events: none;
+      z-index: 10;
+    }
+    .screen-view.active {
+      display: block;
+      opacity: 1;
+      pointer-events: auto;
+      transform: scale(1);
+    }
+
+    /* ==========================================================================
+       2. HUD COMPONENTS: DARK GLASSMORPHISM
+       ========================================================================== */
+    .top-nasa-bar {
+      position: absolute;
+      top: calc(10px + var(--safe-top));
+      left: calc(12px + var(--safe-left));
+      right: calc(12px + var(--safe-right));
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      z-index: 120;
+      pointer-events: none;
+    }
+    .top-nasa-bar > * {
+      pointer-events: auto;
+    }
+
+    .nasa-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 14px;
+      background: rgba(8, 14, 28, 0.9);
+      border: 1px solid var(--titanium-border);
+      border-radius: 30px;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+    }
+
+    .nasa-insignia-logo {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--nasa-blue);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 8px;
+      letter-spacing: 0.5px;
+      color: #fff;
+      position: relative;
+    }
+    .nasa-insignia-logo::after {
+      content: '';
+      position: absolute;
+      width: 13px;
+      height: 2px;
+      background: var(--nasa-red);
+      transform: rotate(-35deg);
+    }
+
+    .status-text {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      color: var(--text-white);
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .gold-official-tag {
+      color: var(--gold-foil);
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      padding: 2px 7px;
+      border-radius: 10px;
+      font-size: 9.5px;
+      margin-left: 6px;
+    }
+
+    .controls-cluster {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .hud-control-btn {
+      min-width: var(--touch-size);
+      min-height: var(--touch-size);
+      padding: 8px 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: rgba(10, 18, 36, 0.88);
+      border: 1px solid var(--titanium-border);
+      border-radius: 24px;
+      color: var(--text-white);
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      transition: all 0.2s var(--trans-smooth);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+    }
+    .hud-control-btn:hover, .hud-control-btn:active {
+      border-color: var(--gold-foil);
+      color: var(--gold-foil-bright);
+      background: rgba(245, 158, 11, 0.14);
+      transform: translateY(-1px);
+    }
+    .hud-control-btn.icon-only {
+      width: var(--touch-size);
+      height: var(--touch-size);
+      padding: 0;
+      border-radius: 50%;
+    }
+
+    /* Primary Mission Call to Action Buttons */
+    .btn-mission-cta {
+      min-height: 52px;
+      padding: 12px 28px;
+      background: linear-gradient(135deg, #1e3a8a 0%, #0b3d91 60%, #172554 100%);
+      border: 1px solid rgba(148, 163, 184, 0.45);
+      border-top: 1px solid rgba(255, 255, 255, 0.6);
+      border-radius: 26px;
+      color: #ffffff;
+      font-family: var(--font-mono);
+      font-size: 13.5px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      box-shadow: 0 8px 24px var(--nasa-blue-glow), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+      transition: all 0.2s var(--trans-smooth);
+    }
+    .btn-mission-cta:hover {
+      background: linear-gradient(135deg, #2563eb 0%, #0b3d91 70%, #1e3a8a 100%);
+      border-color: #38bdf8;
+      box-shadow: 0 10px 30px rgba(56, 189, 248, 0.4);
+    }
+    .btn-mission-cta:active {
+      transform: scale(0.97);
+    }
+
+    .btn-gold-dive {
+      background: linear-gradient(135deg, #b45309 0%, #d97706 50%, #f59e0b 100%);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      color: #030611;
+      font-weight: 800;
+      box-shadow: 0 8px 25px var(--gold-glow);
+    }
+    .btn-gold-dive:hover {
+      background: linear-gradient(135deg, #d97706 0%, #f59e0b 50%, #fbbf24 100%);
+      box-shadow: 0 10px 30px rgba(245, 158, 11, 0.6);
+    }
+
+    /* ==========================================================================
+       3. SCREEN 1: LAUNCHPAD (LC-39A // NASA SLS ROCKET)
+       ========================================================================== */
+    #screen-launch {
+      background: radial-gradient(circle at 50% 85%, #0f1c38 0%, #060b17 60%, #010308 100%);
+    }
+
+    #launch-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    .launch-content-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: calc(65px + var(--safe-top)) calc(16px + var(--safe-right)) calc(24px + var(--safe-bottom)) calc(16px + var(--safe-left));
+      pointer-events: none;
+    }
+
+    .launch-header-block {
+      text-align: center;
+      pointer-events: auto;
+      max-width: 650px;
+      margin: 0 auto;
+    }
+
+    .launch-subtitle {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 2.5px;
+      color: var(--gold-foil);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .launch-hero-title {
+      font-size: clamp(26px, 6vw, 44px);
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.5px;
+      background: linear-gradient(180deg, #ffffff 40%, #cbd5e1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 10px;
+    }
+
+    .launch-desc {
+      font-size: 13.5px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .launch-footer-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      pointer-events: auto;
+    }
+
+    .specs-strip {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 90vw;
+    }
+
+    .spec-badge {
+      background: rgba(10, 18, 36, 0.85);
+      border: 1px solid var(--titanium-border);
+      padding: 6px 12px;
+      border-radius: 10px;
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      color: var(--text-muted);
+      backdrop-filter: blur(10px);
+    }
+    .spec-badge strong {
+      color: var(--text-white);
+    }
+
+    .camera-shake-active {
+      animation: launch-vibration 0.12s infinite;
+    }
+
+    @keyframes launch-vibration {
+      0% { transform: translate(1px, 2px) rotate(0deg); }
+      20% { transform: translate(-2px, -1px) rotate(-0.3deg); }
+      40% { transform: translate(-2px, 1px) rotate(0.3deg); }
+      60% { transform: translate(2px, 2px) rotate(0deg); }
+      80% { transform: translate(1px, -2px) rotate(0.3deg); }
+      100% { transform: translate(-1px, 1px) rotate(-0.3deg); }
+    }
+
+    /* ==========================================================================
+       4. SCREEN 2: SOLAR SYSTEM VIEW (PHOTOREALISTIC ORRERY MAP)
+       ========================================================================== */
+    #screen-solar {
+      background: #010308;
+    }
+
+    #solar-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      cursor: grab;
+      z-index: 1;
+    }
+    #solar-canvas:active {
+      cursor: grabbing;
+    }
+
+    .solar-nav-strip {
+      position: absolute;
+      bottom: calc(16px + var(--safe-bottom));
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 6px;
+      padding: 6px;
+      background: rgba(10, 18, 36, 0.92);
+      border: 1px solid var(--titanium-border);
+      border-radius: 28px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      z-index: 80;
+      max-width: 95vw;
+      overflow-x: auto;
+      scrollbar-width: none;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.75);
+    }
+    .solar-nav-strip::-webkit-scrollbar {
+      display: none;
+    }
+
+    .body-nav-chip {
+      padding: 8px 14px;
+      border-radius: 20px;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s var(--trans-smooth);
+    }
+    .body-nav-chip.active, .body-nav-chip:hover {
+      background: rgba(245, 158, 11, 0.16);
+      color: var(--gold-foil-bright);
+    }
+
+    .map-zoom-controls {
+      position: absolute;
+      right: calc(14px + var(--safe-right));
+      bottom: calc(80px + var(--safe-bottom));
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 80;
+    }
+
+    .zoom-circle-button {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(10, 18, 36, 0.88);
+      border: 1px solid var(--titanium-border);
+      color: var(--text-white);
+      font-size: 18px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      backdrop-filter: blur(14px);
+      transition: all 0.2s;
+    }
+    .zoom-circle-button:active {
+      transform: scale(0.92);
+      border-color: var(--gold-foil);
+    }
+
+    /* Celestial Body Summary Drawer */
+    .celestial-card-drawer {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      max-height: 84vh;
+      background: rgba(6, 12, 26, 0.97);
+      border-top: 1px solid rgba(245, 158, 11, 0.35);
+      border-radius: 24px 24px 0 0;
+      padding: 18px 22px calc(24px + var(--safe-bottom)) 22px;
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+      box-shadow: 0 -16px 48px rgba(0, 0, 0, 0.85);
+      transform: translateY(105%);
+      transition: transform 0.4s var(--trans-smooth);
+      z-index: 95;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+    .celestial-card-drawer.open {
+      transform: translateY(0);
+    }
+
+    .drawer-handle {
+      width: 44px;
+      height: 4px;
+      background: rgba(148, 163, 184, 0.3);
+      border-radius: 2px;
+      margin: 0 auto 14px auto;
+      flex-shrink: 0;
+    }
+
+    .drawer-head-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+    .drawer-tag {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--gold-foil);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+    .drawer-title {
+      font-size: 24px;
+      font-weight: 800;
+      margin-top: 2px;
+    }
+    .drawer-close-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .telemetry-triad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 12px 0 16px 0;
+    }
+    .triad-cell {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      border-radius: 12px;
+      padding: 8px 10px;
+      text-align: center;
+    }
+    .triad-cell .k {
+      font-size: 9.5px;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+    .triad-cell .v {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-white);
+      margin-top: 3px;
+      font-family: var(--font-mono);
+    }
+
+    .missions-chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+    .mission-pill {
+      background: rgba(11, 61, 145, 0.35);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      border-radius: 8px;
+      padding: 5px 9px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: #7dd3fc;
+    }
+
+    /* ==========================================================================
+       5. SCREEN 3: SURFACE EXPLORATION AND PLANETARY ARCHAEOLOGY
+       ========================================================================== */
+    #screen-surface {
+      background: #000;
+    }
+
+    #surface-pan-viewport {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      cursor: grab;
+      touch-action: pan-x;
+    }
+    #surface-pan-viewport:active {
+      cursor: grabbing;
+    }
+
+    .surface-strip {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 3400px;
+      will-change: transform;
+      transition: transform 0.04s linear;
+      background-size: cover;
+      background-position: center bottom;
+      background-repeat: no-repeat;
+    }
+
+    #surface-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    /* Archaeological Hotspots */
+    .archaeo-hotspot {
+      position: absolute;
+      width: 52px;
+      height: 52px;
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+      z-index: 45;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .hotspot-radar-wave {
+      position: absolute;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 2px solid var(--gold-foil);
+      box-shadow: 0 0 16px var(--gold-glow);
+      animation: radar-sweep 2.2s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+    }
+
+    .hotspot-center-dot {
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--gold-foil);
+      border: 2px solid #fff;
+      box-shadow: 0 0 12px rgba(255, 255, 255, 0.8);
+      transition: transform 0.2s;
+    }
+
+    .hotspot-tag {
+      position: absolute;
+      bottom: -26px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(8, 14, 28, 0.94);
+      border: 1px solid var(--titanium-border);
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      white-space: nowrap;
+      color: #fff;
+      pointer-events: none;
+      backdrop-filter: blur(6px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+    }
+
+    .archaeo-hotspot:hover .hotspot-center-dot,
+    .archaeo-hotspot:active .hotspot-center-dot {
+      transform: scale(1.35);
+      background: #ffffff;
+    }
+
+    @keyframes radar-sweep {
+      0% { transform: scale(0.6); opacity: 1; }
+      100% { transform: scale(2.4); opacity: 0; }
+    }
+
+    /* Lunar Environmental Telemetry HUD */
+    .lunar-telemetry-hud {
+      position: absolute;
+      top: calc(65px + var(--safe-top));
+      left: calc(14px + var(--safe-left));
+      background: rgba(8, 14, 28, 0.92);
+      border: 1px solid var(--titanium-border);
+      border-left: 3px solid var(--gold-foil);
+      border-radius: 14px;
+      padding: 12px 16px;
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      z-index: 50;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.7);
+      width: min(310px, 86vw);
+      pointer-events: auto;
+    }
+
+    .telem-title {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      color: var(--gold-foil);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .telem-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 3.5px 0;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+    }
+    .telem-row:last-child {
+      border-bottom: none;
+    }
+    .telem-row .label {
+      color: var(--text-muted);
+    }
+    .telem-row .val {
+      font-weight: 700;
+      color: var(--text-white);
+    }
+
+    /* Photorealistic Inspection Modal */
+    .inspection-modal-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(1, 3, 8, 0.85);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      z-index: 130;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: calc(16px + var(--safe-top)) calc(14px + var(--safe-right)) calc(16px + var(--safe-bottom)) calc(14px + var(--safe-left));
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.28s ease;
+    }
+    .inspection-modal-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .inspection-window {
+      background: rgba(10, 18, 36, 0.96);
+      border: 1px solid var(--titanium-border);
+      border-top: 2px solid var(--gold-foil);
+      border-radius: 20px;
+      max-width: 560px;
+      width: 100%;
+      max-height: 88vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9), 0 0 30px rgba(245, 158, 11, 0.12);
+      transform: scale(0.96);
+      transition: transform 0.28s var(--trans-smooth);
+    }
+    .inspection-modal-overlay.open .inspection-window {
+      transform: scale(1);
+    }
+
+    /* Technical Schematic Header */
+    .schematic-header-canvas {
+      height: 140px;
+      background: radial-gradient(circle at 50% 50%, #152244 0%, #080f21 80%);
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-bottom: 1px solid var(--titanium-border);
+      overflow: hidden;
+    }
+
+    .modal-scrollable-body {
+      padding: 18px 20px;
+      overflow-y: auto;
+    }
+
+    .modal-tag {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--gold-foil);
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+    }
+
+    .modal-title {
+      font-size: 21px;
+      font-weight: 800;
+      margin: 4px 0 12px 0;
+    }
+
+    .specs-grid-4 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin: 12px 0 16px 0;
+    }
+    .spec-cell {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(148, 163, 184, 0.1);
+      border-radius: 10px;
+      padding: 8px 12px;
+    }
+    .spec-cell .label {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+    .spec-cell .val {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-white);
+      margin-top: 2px;
+    }
+
+    .quote-didactic {
+      background: rgba(245, 158, 11, 0.08);
+      border-left: 3px solid var(--gold-foil);
+      padding: 10px 14px;
+      border-radius: 0 10px 10px 0;
+      margin: 14px 0;
+      font-size: 12.5px;
+      color: #fde68a;
+      line-height: 1.45;
+    }
+
+    .pan-hint-pill {
+      position: absolute;
+      bottom: calc(20px + var(--safe-bottom));
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(8, 14, 28, 0.9);
+      border: 1px solid var(--titanium-border);
+      border-radius: 24px;
+      padding: 7px 16px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      backdrop-filter: blur(12px);
+      pointer-events: none;
+      z-index: 50;
+      animation: hint-fade 2.5s infinite;
+    }
+
+    @keyframes hint-fade {
+      0%, 100% { opacity: 0.95; }
+      50% { opacity: 0.45; }
+    }
+
+    /* ==========================================================================
+       6. SCREEN 4: MISSION LOG / SCIENTIFIC ENCYCLOPEDIA (STUDENT MODE)
+       ========================================================================== */
+    .encyclopedia-drawer {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: min(540px, 100vw);
+      height: 100%;
+      background: rgba(5, 10, 22, 0.98);
+      border-left: 1px solid var(--titanium-border);
+      box-shadow: -16px 0 50px rgba(0, 0, 0, 0.9);
+      z-index: 150;
+      display: flex;
+      flex-direction: column;
+      transform: translateX(105%);
+      transition: transform 0.4s var(--trans-smooth);
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+    }
+    .encyclopedia-drawer.open {
+      transform: translateX(0);
+    }
+
+    .enc-header {
+      padding: calc(14px + var(--safe-top)) 18px 14px 20px;
+      border-bottom: 1px solid var(--titanium-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(10, 18, 36, 0.6);
+    }
+
+    .enc-title-group h3 {
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: -0.2px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .enc-title-group p {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--gold-foil);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    .enc-tabs-bar {
+      display: flex;
+      gap: 6px;
+      padding: 10px 18px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+      overflow-x: auto;
+      scrollbar-width: none;
+      background: rgba(8, 14, 28, 0.5);
+    }
+    .enc-tabs-bar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .enc-tab-chip {
+      padding: 7px 12px;
+      border-radius: 8px;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .enc-tab-chip.active {
+      background: rgba(245, 158, 11, 0.14);
+      border-color: rgba(245, 158, 11, 0.35);
+      color: var(--gold-foil-bright);
+    }
+
+    .enc-articles-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .enc-card {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(148, 163, 184, 0.14);
+      border-radius: 14px;
+      padding: 16px;
+      transition: border-color 0.2s;
+    }
+    .enc-card:hover {
+      border-color: rgba(245, 158, 11, 0.4);
+    }
+
+    .enc-card .tag {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--gold-foil);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .enc-card h4 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .enc-card p {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.55;
+      margin-bottom: 10px;
+    }
+
+    .enc-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      margin-top: 8px;
+    }
+    .enc-table td {
+      padding: 4px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .enc-table td:first-child {
+      color: var(--text-dim);
+      width: 45%;
+    }
+    .enc-table td:last-child {
+      color: var(--text-white);
+      font-weight: 600;
+      text-align: right;
+    }
+
+    /* Desktop Responsive View */
+    @media (min-width: 900px) {
+      .celestial-card-drawer {
+        left: 24px;
+        right: auto;
+        bottom: 24px;
+        width: 400px;
+        max-height: 82vh;
+        border-radius: 20px;
+        border: 1px solid var(--titanium-border);
+        border-top: 2px solid var(--gold-foil);
+        transform: translateX(-120%);
+      }
+      .celestial-card-drawer.open {
+        transform: translateX(0);
+      }
+      .solar-nav-strip {
+        bottom: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="app-container">
+
+    <!-- ====================================================================
+         GLOBAL MISSION TOP BAR
+         ==================================================================== -->
+    <header class="top-nasa-bar">
+      <div class="nasa-badge">
+        <div class="nasa-insignia-logo">NASA</div>
+        <div class="status-text">
+          <span id="label-hud-status">CAPE CANAVERAL // T-0 STANDBY</span>
+          <span class="gold-official-tag">OFFICIAL</span>
+        </div>
+      </div>
+
+      <div class="controls-cluster">
+        <!-- Mission Log / Student Encyclopedia Button -->
+        <button class="hud-control-btn" id="btn-toggle-enc" title="Open NASA Mission Log and Encyclopedia">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
+          <span>ENCYCLOPEDIA</span>
+        </button>
+
+        <!-- Return to Orbit Button (Active during surface exploration) -->
+        <button class="hud-control-btn" id="btn-back-orbit" style="display:none;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+          <span>ORBIT</span>
+        </button>
+
+        <!-- Procedural Offline Audio -->
+        <button class="hud-control-btn icon-only" id="btn-audio-mute" title="Telemetry Audio">
+          <svg id="icon-sound-on" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          </svg>
+          <svg id="icon-sound-off" style="display:none;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <line x1="23" y1="9" x2="17" y2="15"></line>
+            <line x1="17" y1="9" x2="23" y2="15"></line>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- ====================================================================
+         SCREEN 1: LAUNCHPAD (LC-39A // SPACE LAUNCH SYSTEM SLS)
+         ==================================================================== -->
+    <section class="screen-view active" id="screen-launch">
+      <canvas id="launch-canvas"></canvas>
+
+      <div class="launch-content-overlay">
+        <div class="launch-header-block">
+          <div class="launch-subtitle">
+            <span>NASA KENNEDY SPACE CENTER</span>
+            <span>//</span>
+            <span>LAUNCH COMPLEX 39A</span>
+          </div>
+          <h1 class="launch-hero-title">NASA ARCHAEOLOGICAL EXPEDITION</h1>
+          <p class="launch-desc">
+            Explore over 50 years of NASA space exploration: from the historic footsteps of the Apollo program and the Lunar Roving Vehicle to robotic field laboratories on Mars and the outer boundaries of the cosmos.
+          </p>
+        </div>
+
+        <div class="launch-footer-block">
+          <div class="specs-strip">
+            <div class="spec-badge">VEHICLE: <strong>NASA SLS BLOCK 1B</strong></div>
+            <div class="spec-badge">LIFTOFF THRUST: <strong>39.1 MEGANNEWTONS</strong></div>
+            <div class="spec-badge">PROPELLANTS: <strong>CRYOGENIC LOX / LH2</strong></div>
+          </div>
+
+          <button class="btn-mission-cta" id="btn-start-liftoff" style="width: min(340px, 92vw);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+              <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path>
+              <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path>
+              <path d="M9 12H4s.55-3.03 2-4.5c1.62-1.63 5-2.5 5-2.5"></path>
+              <path d="M12 15v5s3.03-.55 4.5-2c1.63-1.62 2.5-5 2.5-5"></path>
+            </svg>
+            <span>START JOURNEY</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         SCREEN 2: SOLAR SYSTEM VIEW (PHOTOREALISTIC ORRERY MAP)
+         ==================================================================== -->
+    <section class="screen-view" id="screen-solar">
+      <canvas id="solar-canvas"></canvas>
+
+      <!-- Celestial Navigation Chips -->
+      <nav class="solar-nav-strip" id="solar-chips-nav">
+        <button class="body-nav-chip active" data-id="all">FULL SYSTEM</button>
+        <button class="body-nav-chip" data-id="earth">EARTH (ORIGIN)</button>
+        <button class="body-nav-chip" data-id="moon">THE MOON (APOLLO)</button>
+        <button class="body-nav-chip" data-id="mars">MARS (JPL)</button>
+        <button class="body-nav-chip" data-id="asteroids">ASTEROIDS (DAWN / NEAR)</button>
+        <button class="body-nav-chip" data-id="jupiter">JUPITER (PIONEER 10)</button>
+        <button class="body-nav-chip" data-id="kepler">EXOPLANETS (KEPLER)</button>
+      </nav>
+
+      <!-- Zoom Controls -->
+      <div class="map-zoom-controls">
+        <button class="zoom-circle-button" id="btn-zoom-plus" title="Zoom In">+</button>
+        <button class="zoom-circle-button" id="btn-zoom-minus" title="Zoom Out">−</button>
+      </div>
+
+      <!-- Celestial Summary Card (Drawer) -->
+      <div class="celestial-card-drawer" id="celestial-drawer">
+        <div class="drawer-handle"></div>
+        <div class="drawer-head-row">
+          <div>
+            <div class="drawer-tag" id="drawer-tag">NASA DEEP SPACE NETWORK</div>
+            <h2 class="drawer-title" id="drawer-name">Mars</h2>
+          </div>
+          <button class="drawer-close-btn" id="drawer-close-button" aria-label="Close">✕</button>
+        </div>
+
+        <div class="telemetry-triad">
+          <div class="triad-cell">
+            <div class="k">Solar Distance</div>
+            <div class="v" id="stat-dist">1.52 AU</div>
+          </div>
+          <div class="triad-cell">
+            <div class="k">Gravity</div>
+            <div class="v" id="stat-grav">3.72 m/s²</div>
+          </div>
+          <div class="triad-cell">
+            <div class="k">Diameter</div>
+            <div class="v" id="stat-diam">6,779 km</div>
+          </div>
+        </div>
+
+        <div style="font-family:var(--font-mono); font-size:10px; color:var(--text-dim); text-transform:uppercase; margin-bottom:6px;">
+          Exclusive NASA Missions
+        </div>
+        <div class="missions-chip-row" id="drawer-missions-row"></div>
+
+        <p id="drawer-narrative" style="font-size:13.5px; color:var(--text-muted); line-height:1.55; margin-bottom:18px;"></p>
+
+        <!-- Surface Dive CTA Button (Moon & Mars) -->
+        <button class="btn-mission-cta btn-gold-dive" id="btn-dive-surface" style="width: 100%;">
+          <span>EXPLORE SURFACE</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         SCREEN 3: SURFACE EXPLORATION AND PLANETARY ARCHAEOLOGY
+         ==================================================================== -->
+    <section class="screen-view" id="screen-surface">
+      <div id="surface-pan-viewport">
+        <div class="surface-strip" id="surface-strip-el">
+          <canvas id="surface-canvas"></canvas>
+          <div id="surface-hotspots-layer"></div>
+        </div>
+      </div>
+
+      <!-- Live Planetary Environmental Telemetry HUD (Dynamic for Moon & Mars) -->
+      <aside class="lunar-telemetry-hud" id="surface-telem-panel" style="display:none;">
+        <div class="telem-title">
+          <span id="telem-header-title">NASA TELEMETRY // ALSEP</span>
+          <span style="color:var(--gold-foil); font-size:9px;">● ACTIVE SENSORS</span>
+        </div>
+        <div class="telem-row">
+          <span class="label">Surface Temperature:</span>
+          <span class="val" id="telem-temp-val">-130 °C to +121 °C</span>
+        </div>
+        <div class="telem-row">
+          <span class="label">Surface Gravity:</span>
+          <span class="val" id="telem-grav-val">1.622 m/s² (0.166 g)</span>
+        </div>
+        <div class="telem-row">
+          <span class="label">Atmospheric Pressure:</span>
+          <span class="val" id="telem-press-val">3 × 10⁻¹⁵ atm (Vacuum)</span>
+        </div>
+        <div class="telem-row">
+          <span class="label" id="telem-cycle-lbl">Diurnal Cycle:</span>
+          <span class="val" id="telem-cycle-val">27.3 Earth Days (Synchronous)</span>
+        </div>
+        <div class="telem-row">
+          <span class="label">Cosmic Radiation:</span>
+          <span class="val" id="telem-rad-val">1.32 mSv/day (Unshielded)</span>
+        </div>
+      </aside>
+
+      <!-- Pan Hint Pill -->
+      <div class="pan-hint-pill">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+          <polyline points="12 5 19 12 12 19"></polyline>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        <span>Swipe or drag to explore the extraterrestrial horizon</span>
+      </div>
+
+      <!-- Photorealistic Technical Inspection Modal -->
+      <div class="inspection-modal-overlay" id="inspection-modal">
+        <div class="inspection-window">
+          <div class="schematic-header-canvas" id="modal-schematic-box">
+            <!-- Dynamic high-precision vector SVG schematic rendering -->
+          </div>
+          <div class="modal-scrollable-body">
+            <div class="modal-tag" id="modal-tag-el">NASA ARTIFACT DOSSIER</div>
+            <h3 class="modal-title" id="modal-title-el">Apollo 15 Lunar Module 'Falcon'</h3>
+
+            <div class="specs-grid-4">
+              <div class="spec-cell">
+                <div class="label">Mission & Landing Year</div>
+                <div class="val" id="modal-year-el">Apollo 15 (1971)</div>
+              </div>
+              <div class="spec-cell">
+                <div class="label">Coordinates / Region</div>
+                <div class="val" id="modal-coords-el">26.1322° N, 3.6339° E</div>
+              </div>
+              <div class="spec-cell">
+                <div class="label">Crew / NASA Center</div>
+                <div class="val" id="modal-crew-el">D. Scott & J. Irwin</div>
+              </div>
+              <div class="spec-cell">
+                <div class="label">Mass / Propulsion</div>
+                <div class="val" id="modal-prop-el">16,430 kg // Aerozine 50</div>
+              </div>
+            </div>
+
+            <div class="quote-didactic" id="modal-didactic-el">
+              Student Science Insight: NASA aerospace engineering breakdown.
+            </div>
+
+            <p id="modal-desc-el" style="font-size:13.5px; color:var(--text-muted); line-height:1.55; margin-bottom:16px;">
+              Detailed historical dossier based on official NASA NSSDCA archives.
+            </p>
+
+            <button class="btn-mission-cta" id="btn-close-modal" style="width: 100%;">
+              <span>ACKNOWLEDGED // CLOSE DOSSIER</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         SCREEN 4: MISSION LOG / SCIENTIFIC ENCYCLOPEDIA (STUDENT MODE)
+         ==================================================================== -->
+    <aside class="encyclopedia-drawer" id="encyclopedia-drawer">
+      <div class="enc-header">
+        <div class="enc-title-group">
+          <h3>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gold-foil)" stroke-width="2.2">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+            </svg>
+            <span>NASA ENCYCLOPEDIA</span>
+          </h3>
+          <p>Educational Compendium for Students (Ages 13-16)</p>
+        </div>
+        <button class="drawer-close-btn" id="btn-close-enc" aria-label="Close Encyclopedia">✕</button>
+      </div>
+
+      <!-- Tab Navigation Bar -->
+      <div class="enc-tabs-bar">
+        <button class="enc-tab-chip active" data-tab="apollo">APOLLO PROGRAM</button>
+        <button class="enc-tab-chip" data-tab="mars">MARS ROVERS (JPL)</button>
+        <button class="enc-tab-chip" data-tab="deep">DEEP SPACE</button>
+        <button class="enc-tab-chip" data-tab="concepts">SCIENCE CONCEPTS</button>
+      </div>
+
+      <!-- Articles Scroll View -->
+      <div class="enc-articles-scroll" id="enc-articles-scroll"></div>
+    </aside>
+
+  </div>
+
+  <!-- ======================================================================
+       JAVASCRIPT ENGINE: SELF-CONTAINED, MODULAR, AND 100% OFFLINE
+       ====================================================================== -->
+  <script>
+    /* ======================================================================
+       A. PROCEDURAL AUDIO SYNTHESIZER (WEB AUDIO API // OFFLINE)
+       ====================================================================== */
+    class NasaAudioSystem {
+      constructor() {
+        this.ctx = null;
+        this.enabled = true;
+      }
+
+      initContext() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) {
+            this.ctx = new AudioContext();
+          }
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+
+      toggleAudio() {
+        this.enabled = !this.enabled;
+        return this.enabled;
+      }
+
+      playTelemetryChirp(freq = 900, duration = 0.07) {
+        if (!this.enabled) return;
+        this.initContext();
+        if (!this.ctx) return;
+        try {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(freq * 1.3, this.ctx.currentTime + duration);
+          gain.gain.setValueAtTime(0.06, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + duration);
+        } catch(e) {}
+      }
+
+      playRocketIgnition(duration = 4.2) {
+        if (!this.enabled) return;
+        this.initContext();
+        if (!this.ctx) return;
+        try {
+          const bufferSize = this.ctx.sampleRate * duration;
+          const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+          const data = buffer.getChannelData(0);
+          let lastVal = 0.0;
+          for (let i = 0; i < bufferSize; i++) {
+            const white = Math.random() * 2 - 1;
+            lastVal = (lastVal + (0.05 * white)) / 1.05;
+            data[i] = lastVal * 2.8;
+          }
+
+          const noiseSource = this.ctx.createBufferSource();
+          noiseSource.buffer = buffer;
+
+          const filter = this.ctx.createBiquadFilter();
+          filter.type = 'lowpass';
+          filter.frequency.setValueAtTime(150, this.ctx.currentTime);
+          filter.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + duration * 0.7);
+
+          const gain = this.ctx.createGain();
+          gain.gain.setValueAtTime(0.06, this.ctx.currentTime);
+          gain.gain.linearRampToValueAtTime(0.38, this.ctx.currentTime + 1.2);
+          gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+
+          noiseSource.connect(filter);
+          filter.connect(gain);
+          gain.connect(this.ctx.destination);
+
+          noiseSource.start();
+          noiseSource.stop(this.ctx.currentTime + duration);
+        } catch(e) {}
+      }
+
+      playBeaconPing() {
+        if (!this.enabled) return;
+        this.initContext();
+        if (!this.ctx) return;
+        try {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(1400, this.ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(450, this.ctx.currentTime + 0.28);
+          gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.28);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + 0.28);
+        } catch(e) {}
+      }
+    }
+
+    const sound = new NasaAudioSystem();
+
+    /* ======================================================================
+       B. SCIENTIFIC DATA: 100% EXCLUSIVE TO NASA (NSSDCA ARCHIVES)
+       ====================================================================== */
+    const NASA_CELESTIAL_BODIES = {
+      sun: {
+        id: "sun",
+        name: "The Sun",
+        tag: "HOST STAR // G2V SPECTRAL CLASS",
+        dist: "0.00 AU",
+        grav: "274.0 m/s²",
+        diam: "1,392,700 km",
+        missions: ["Parker Solar Probe", "SOHO", "Solar Dynamics Observatory"],
+        narrative: "The gravitational power plant of our solar system. Pioneering NASA missions like the Parker Solar Probe travel closer to the solar surface than any human-built craft in history, unlocking the secrets of the corona and solar wind.",
+        color: "#fbbf24",
+        radius: 36,
+        orbitRadius: 0,
+        speed: 0,
+        hasSurface: false,
+        textureType: "sun"
+      },
+      earth: {
+        id: "earth",
+        name: "Earth",
+        tag: "ORIGIN OF HUMAN SPACE EXPLORATION",
+        dist: "1.00 AU (149.6M km)",
+        grav: "9.81 m/s²",
+        diam: "12,742 km",
+        missions: ["Apollo Program", "Landsat", "International Space Station (NASA)", "Hubble Space Telescope"],
+        narrative: "The home world and command center of NASA's historic journey. From Launch Complex 39 at Kennedy Space Center in Florida and Mission Control in Houston, Apollo astronauts embarked to set foot upon another world.",
+        color: "#38bdf8",
+        radius: 13,
+        orbitRadius: 108,
+        speed: 0.008,
+        hasSurface: false,
+        textureType: "earth"
+      },
+      moon: {
+        id: "moon",
+        name: "The Moon",
+        tag: "APOLLO PROGRAM // CREWED EXPLORATION",
+        dist: "384,400 km from Earth",
+        grav: "1.622 m/s² (1/6 g)",
+        diam: "3,474 km",
+        missions: ["Apollo 11", "Apollo 12", "Apollo 14", "Apollo 15", "Apollo 16", "Apollo 17", "Surveyor 3", "LRO", "Artemis Program"],
+        narrative: "NASA's open-air extraterrestrial museum and Earth's only natural satellite. Tidally locked in synchronous rotation (27.3 days), its surface swings from scorching +121 °C at lunar noon down to -130 °C at night, plunging to -246 °C in permanently shadowed polar craters where water ice survives. Features ancient 4.4-billion-year-old anorthosite highlands and volcanic basalt maria.",
+        color: "#cbd5e1",
+        radius: 7,
+        orbitRadius: 152,
+        speed: 0.012,
+        hasSurface: true,
+        surfaceType: "moon",
+        textureType: "moon"
+      },
+      mars: {
+        id: "mars",
+        name: "Mars",
+        tag: "ROBOTIC FIELD LABORATORY // NASA JPL",
+        dist: "1.52 AU (227.9M km)",
+        grav: "3.72 m/s²",
+        diam: "6,779 km",
+        missions: ["Mariner 4 & 9", "Viking 1 & 2", "Mars Pathfinder", "Spirit & Opportunity", "Curiosity", "Perseverance", "Ingenuity", "InSight"],
+        narrative: "The Red Planet possesses a day length (Sol) of 24h 39m and an axial tilt of 25.19° creating distinct seasons across its 687-day year. Its thin atmosphere (95.3% CO2 at 6.1 millibars) sustains global dust storms. Home to Olympus Mons (21.9 km high, the largest volcano in the Solar System) and Valles Marineris (a 4,000 km grand canyon system).",
+        color: "#ea580c",
+        radius: 9.5,
+        orbitRadius: 215,
+        speed: 0.006,
+        hasSurface: true,
+        surfaceType: "mars",
+        textureType: "mars"
+      },
+      asteroids: {
+        id: "asteroids",
+        name: "Asteroid Belt",
+        tag: "DAWN & NEAR SHOEMAKER MISSIONS",
+        dist: "2.2 - 3.2 AU",
+        grav: "0.27 m/s² (Ceres)",
+        diam: "940 km (Ceres)",
+        missions: ["NASA Dawn (Ceres & Vesta)", "NEAR Shoemaker (Eros & Mathilde)", "OSIRIS-REx", "Psyche"],
+        narrative: "NASA's Dawn spacecraft made history as the first mission to orbit two distinct extraterrestrial bodies beyond Earth (protoplanet Vesta and dwarf planet Ceres). NEAR Shoemaker performed the first controlled soft landing on asteroid Eros in 2001.",
+        color: "#94a3b8",
+        radius: 5,
+        orbitRadius: 280,
+        speed: 0.0038,
+        hasSurface: false,
+        textureType: "asteroids"
+      },
+      jupiter: {
+        id: "jupiter",
+        name: "Jupiter",
+        tag: "PIONEER 10 PROBE // OUTER SOLAR SYSTEM",
+        dist: "5.20 AU (778.5M km)",
+        grav: "24.79 m/s²",
+        diam: "139,820 km",
+        missions: ["Pioneer 10 (1972)", "Pioneer 11", "Voyager 1 & 2", "Galileo", "Juno"],
+        narrative: "NASA's Pioneer 10 became the first spacecraft to safely transit the Asteroid Belt and fly past Jupiter in 1973 at a distance of 130,354 km. It carries the famous gold-anodized aluminum plaque into interstellar space.",
+        color: "#d97706",
+        radius: 22,
+        orbitRadius: 360,
+        speed: 0.0024,
+        hasSurface: false,
+        textureType: "jupiter"
+      },
+      kepler: {
+        id: "kepler",
+        name: "Kepler Space Observatory",
+        tag: "EXOPLANET SEARCH // NASA AMES",
+        dist: "Heliocentric Earth-Trailing",
+        grav: "N/A (Space Telescope)",
+        diam: "1.4 m Primary Mirror",
+        missions: ["Kepler Primary (2009-2013)", "K2 Mission (2013-2018)"],
+        narrative: "Over nine years in deep space, Kepler proved that planets outnumber stars in the Milky Way, discovering more than 2,600 verified exoplanets by measuring micro-dips in starlight during planetary transits.",
+        color: "#818cf8",
+        radius: 6,
+        orbitRadius: 430,
+        speed: 0.0018,
+        hasSurface: false,
+        textureType: "kepler"
+      }
+    };
+
+    /* ======================================================================
+       C. SURFACE ARTIFACTS AND RECALIBRATED TERRAIN HOTSPOTS
+       ====================================================================== */
+    const NASA_SURFACE_HOTSPOTS = {
+      // ----------------- MARS (NASA JPL) -----------------
+      mars: [
+        {
+          id: "perseverance",
+          name: "Perseverance Rover & Ingenuity",
+          category: "MOBILE ROBOTIC LABORATORY // MARS 2020",
+          x: 380,
+          yRatio: 0.72,
+          y: 430,
+          year: "Landing: February 18, 2021",
+          coords: "18.4447° N, 77.4508° E (Jezero Crater)",
+          crew: "NASA Jet Propulsion Laboratory (JPL)",
+          prop: "1,025 kg // MMRTG Nuclear Power",
+          iconType: "rover_curiosity",
+          didactic: "Perseverance carries the MOXIE experiment, which demonstrated producing breathable oxygen directly from Martian atmospheric CO2.",
+          desc: "Designed to seek ancient biosignatures across the dried-up river delta of Jezero Crater. Encapsulates 43 pristine titanium core sample tubes awaiting Mars Sample Return to Earth."
+        },
+        {
+          id: "ingenuity",
+          name: "Ingenuity Mars Helicopter",
+          category: "FIRST POWERED EXTRATERRESTRIAL AIRCRAFT",
+          x: 640,
+          yRatio: 0.48,
+          y: 380,
+          year: "2021 - 2024 (72 Historic Flights)",
+          coords: "Wright Brothers Field, Jezero Crater",
+          crew: "NASA JPL",
+          prop: "1.8 kg (0.68 kg weight on Mars)",
+          iconType: "helicopter",
+          didactic: "Because the Martian atmosphere is less than 1% as dense as Earth's, Ingenuity's carbon-fiber rotor blades spun at over 2,400 RPM.",
+          desc: "Completed 72 operational flights traversing 17.0 km and recording 128.8 airborne minutes, acting as a forward aerial scout for Perseverance and proving the viability of extraterrestrial flight."
+        },
+        {
+          id: "curiosity",
+          name: "Curiosity Rover (MSL)",
+          category: "MARTIAN SCIENCE LABORATORY",
+          x: 1120,
+          yRatio: 0.76,
+          y: 450,
+          year: "Landing: August 6, 2012",
+          coords: "4.5895° S, 137.4417° E (Gale Crater)",
+          crew: "NASA JPL",
+          prop: "899 kg // Plutonium-238 RTG",
+          iconType: "rover_curiosity",
+          didactic: "Curiosity pioneered the 'Sky Crane' touchdown maneuver: a rocket-powered descent stage lowered the rover directly onto its wheels via cables.",
+          desc: "Confirmed that ancient Gale Crater once contained a neutral, long-lived lake environment suitable for microbial life. Continues scaling the layered strata of Mount Sharp."
+        },
+        {
+          id: "opportunity",
+          name: "Opportunity Rover (MER-B)",
+          category: "HISTORIC ROBOTIC FIELD MONUMENT",
+          x: 1620,
+          yRatio: 0.65,
+          y: 415,
+          year: "2004 - 2018 (Operated 14 Years)",
+          coords: "1.9483° S, 354.4742° E (Meridiani Planum)",
+          crew: "NASA JPL",
+          prop: "185 kg // Solar Arrays & Li-Ion Batteries",
+          iconType: "rover_mer",
+          didactic: "Engineered for a nominal 90-sol mission, Opportunity explored Mars for 5,111 sols, setting an off-world driving record of 45.16 km.",
+          desc: "Discovered mineralogical hematite spherules nicknamed 'blueberries', furnishing ironclad geological evidence that liquid acidic water once soaked the Martian plains."
+        },
+        {
+          id: "olympus",
+          name: "Olympus Mons Volcanic Caldera",
+          category: "PLANETARY GEOLOGY // SHIELD SUPER-VOLCANO",
+          x: 2150,
+          yRatio: 0.46,
+          y: 350,
+          year: "Cataloged by Mariner 9 (1971)",
+          coords: "18.65° N, 226.2° E (Tharsis Rise)",
+          crew: "NASA Planetary Geology Division",
+          prop: "Elevation: 21.9 km (2.5x Mt. Everest) // Width: 600 km",
+          iconType: "volcano",
+          didactic: "Because Mars lacks active plate tectonics, the Martian crust remained stationary over a magma hotspot for hundreds of millions of years, allowing basaltic lava to build the tallest volcano in the Solar System.",
+          desc: "Standing 21.9 km high, Olympus Mons is so massive (600 km across) that its outer flanks curve beyond the planetary horizon. Its summit caldera is 80 km wide and features six nested collapse pits."
+        },
+        {
+          id: "pathfinder",
+          name: "Mars Pathfinder & Sojourner Rover",
+          category: "FIRST MICROROVER ON ANOTHER PLANET",
+          x: 2650,
+          yRatio: 0.78,
+          y: 460,
+          year: "Landing: July 4, 1997",
+          coords: "19.33° N, 33.55° W (Ares Vallis)",
+          crew: "NASA JPL",
+          prop: "Pathfinder: 360 kg / Sojourner: 10.6 kg",
+          iconType: "pathfinder",
+          didactic: "Pathfinder avoided heavy landing legs by deploying 24 giant airbags that bounced over 15 times before settling peacefully in the ancient flood plain.",
+          desc: "The Carl Sagan Memorial Station released Sojourner, an autonomous 6-wheeled robotic rover equipped with an alpha proton X-ray spectrometer (APXS) to analyze rock chemistry."
+        },
+        {
+          id: "viking1",
+          name: "Viking 1 Lander (Thomas Mutch Station)",
+          category: "FIRST OPERATIONAL NASA LANDER ON MARS",
+          x: 3080,
+          yRatio: 0.66,
+          y: 470,
+          year: "Landing: July 20, 1976",
+          coords: "22.697° N, 48.222° W (Chryse Planitia)",
+          crew: "NASA Langley / JPL",
+          prop: "Surface lander: 572 kg",
+          iconType: "viking",
+          didactic: "Viking 1 transmitted the first-ever color photograph from the surface of Mars, revealing a butterscotch sky and red-orange iron-oxide terrain.",
+          desc: "Operated for over six years conducting meteorological monitoring, soil trenching, and biological gas chromatograph mass spectrometer (GCMS) analyses for organic compounds."
+        }
+      ],
+
+      // ----------------- THE MOON (NASA APOLLO PROGRAM) -----------------
+      moon: [
+        {
+          id: "eagle11",
+          name: "Apollo 11 Lunar Module 'Eagle' & EASEP",
+          category: "FIRST CREWED LUNAR LANDING // TRANQUILITY BASE",
+          x: 340,
+          yRatio: 0.70,
+          y: 440,
+          year: "Touchdown: July 20, 1969 (20:17:40 UTC)",
+          coords: "0.67408° N, 23.47297° E (Mare Tranquillitatis)",
+          crew: "Neil A. Armstrong & Edwin 'Buzz' Aldrin Jr. (NASA)",
+          prop: "15,103 kg total // Aerozine 50 & N2O4 (~25s fuel left)",
+          iconType: "lunar_module",
+          didactic: "During the final descent, Armstrong took semi-manual control (P66) to steer Eagle over a dangerous field of boulders surrounding West Crater, setting down with under 25 seconds of fuel remaining.",
+          desc: "Tranquility Base marks humanity's first extraterrestrial landing site. The descent stage remains in place along with the Early Apollo Scientific Experiments Package (EASEP - passive seismometer and laser reflector), the stainless steel plaque reading 'We Came in Peace For All Mankind', the American flag, and 21.55 kg of pristine basalt samples collected during a 2h 31m EVA."
+        },
+        {
+          id: "falcon15",
+          name: "Apollo 15 Lunar Module 'Falcon'",
+          category: "CREWED DESCENT STAGE // HADLEY-APENNINE",
+          x: 740,
+          yRatio: 0.68,
+          y: 440,
+          year: "Landing: July 30, 1971",
+          coords: "26.1322° N, 3.6339° E (Hadley Plain)",
+          crew: "David R. Scott & James B. Irwin (NASA)",
+          prop: "16,430 kg total // Aerozine 50 & N2O4",
+          iconType: "lunar_module",
+          didactic: "Falcon was the first extended 'J-series' Lunar Module, modified to transport the Lunar Roving Vehicle and support 3 days on the surface.",
+          desc: "Its octagonal descent stage remains clad in gold-anodized Mylar and Kapton thermal insulation foil. Here, Commander Dave Scott released a falcon feather and a geology hammer in the lunar vacuum, demonstrating Galileo's law of equal gravitational acceleration."
+        },
+        {
+          id: "lrv15",
+          name: "Lunar Roving Vehicle (LRV - Apollo 15)",
+          category: "FIRST CREWED EXTRATERRESTRIAL AUTOMOBILE",
+          x: 1160,
+          yRatio: 0.74,
+          y: 460,
+          year: "July 31, 1971 (Apollo 15 Mission)",
+          coords: "Hadley Rille, foot of the Apennine Mountains",
+          crew: "David Scott & James Irwin",
+          prop: "210 kg (Earth mass) // 35 kg Moon weight",
+          iconType: "lrv_rover",
+          didactic: "The LRV's open-mesh tires were woven from zinc-coated piano steel wire with titanium chevron cleats, preventing tire blowout in the hard vacuum.",
+          desc: "Manufactured by Boeing and Delco for NASA, each wheel featured a dedicated 0.25 HP DC electric motor. It enabled Scott and Irwin to traverse 27.9 km and collect the 4.1-billion-year-old anorthosite 'Genesis Rock'."
+        },
+        {
+          id: "footprints",
+          name: "Astronaut Bootprints (Scott & Irwin)",
+          category: "HUMAN PLANETARY ICHNOLOGY",
+          x: 1580,
+          yRatio: 0.82,
+          y: 475,
+          year: "1971 (Apollo 15 EVA Traverses)",
+          coords: "Hadley-Apennine Valley",
+          crew: "David Scott & James Irwin (NASA)",
+          prop: "A7LB pressure suit // Molded silicone overshoes",
+          iconType: "footprint",
+          didactic: "Because there is no wind, rain, or liquid water erosion on the Moon, these impressions will remain sharp and legible for over a million years.",
+          desc: "The un-eroded, jagged microscopic geometry of pulverized lunar regolith particles holds the crisp chevron tread pattern of the astronauts' boots like damp casting plaster."
+        },
+        {
+          id: "snap27",
+          name: "SNAP-27 Radioisotope Thermoelectric Generator",
+          category: "PLUTONIUM-238 ATOMIC BATTERY (ALSEP)",
+          x: 1980,
+          yRatio: 0.70,
+          y: 440,
+          year: "Apollo 15 Mission (Deployed July 31, 1971)",
+          coords: "Hadley ALSEP Scientific Station",
+          crew: "NASA Apollo Lunar Science",
+          prop: "15.2 kg // 3.8 kg Plutonium-238 Dioxide",
+          iconType: "snap27",
+          didactic: "During the 14-day lunar night, temperatures drop to -130 °C. The heat from radioactive decay allowed NASA's scientific experiments to operate continuously for years without solar panels.",
+          desc: "Supplied 73.5 watts of steady electric power using lead-telluride thermocouples to convert thermal decay heat into electricity, energizing seismometers and heat flow probes for nearly a decade."
+        },
+        {
+          id: "lrrr",
+          name: "Lunar Laser Ranging Retroreflector (LRRR)",
+          category: "PASSIVE LASER EXPERIMENT (ZERO POWER REQUIRED)",
+          x: 2380,
+          yRatio: 0.65,
+          y: 430,
+          year: "1971 (300-Prism Fused Silica Array)",
+          coords: "Hadley-Apennine (26.13° N, 3.63° E)",
+          crew: "Scott & Irwin (NASA)",
+          prop: "Corner-cube optical quartz prisms",
+          iconType: "lrrr",
+          didactic: "Observatories on Earth fire short laser pulses that bounce off this retroreflector, measuring the two-way travel time to gauge Earth-Moon distance with sub-millimeter precision.",
+          desc: "The only Apollo surface experiment still actively generating scientific data today, proving that tidal deceleration causes the Moon to recede from Earth at 3.8 cm per year."
+        },
+        {
+          id: "fallen",
+          name: "'Fallen Astronaut' Memorial (Apollo 15)",
+          category: "DEEP SPACE HUMANITARIAN MEMORIAL",
+          x: 2780,
+          yRatio: 0.76,
+          y: 465,
+          year: "August 1, 1971",
+          coords: "Hadley-Apennine Plain",
+          crew: "David Scott (Apollo 15 Commander)",
+          prop: "8.5 cm aluminum figurine and plaque",
+          iconType: "fallen_astronaut",
+          didactic: "Commander Dave Scott placed the sculpture in the regolith without advance press notice, honoring all astronauts and cosmonauts who died in the pursuit of space exploration.",
+          desc: "Sculpted by Belgian artist Paul Van Hoeydonck, placed alongside an engraved plaque bearing the names of 14 American astronauts and Soviet cosmonauts lost in the line of duty."
+        },
+        {
+          id: "surveyor3",
+          name: "Surveyor 3 Robotic Lander (Visited by Apollo 12)",
+          category: "COMPARATIVE OFF-WORLD ARCHAEOLOGY",
+          x: 3120,
+          yRatio: 0.64,
+          y: 480,
+          year: "Landed 1967 // Visited by Apollo 12 in 1969",
+          coords: "3.0128° S, 23.4219° W (Oceanus Procellarum)",
+          crew: "Visited by Pete Conrad & Alan Bean",
+          prop: "Robotic lander: 296 kg",
+          iconType: "surveyor",
+          didactic: "Pete Conrad and Alan Bean touched down their Lunar Module 'Intrepid' just 180 meters from Surveyor 3 to prove pinpoint lunar landing accuracy.",
+          desc: "The astronauts unbolted Surveyor 3's television camera and robotic trenching scoop to return them to Earth, enabling material scientists to quantify the degradation of metals, glass, and wiring exposed to the lunar environment."
+        }
+      ]
+    };
+
+    /* ======================================================================
+       D. VECTOR TECHNICAL BLUEPRINT GENERATOR FOR MODALS
+       ====================================================================== */
+    function getSchematicSVG(type) {
+      if (type === 'lunar_module') {
+        return `
+          <svg width="220" height="120" viewBox="0 0 220 120" fill="none">
+            <!-- Octagonal gold foil descent stage -->
+            <polygon points="70,60 150,60 165,85 145,95 75,95 55,85" fill="#f59e0b" stroke="#fbbf24" stroke-width="1.5"/>
+            <!-- Landing gear struts -->
+            <line x1="60" y1="85" x2="25" y2="110" stroke="#cbd5e1" stroke-width="3"/>
+            <line x1="160" y1="85" x2="195" y2="110" stroke="#cbd5e1" stroke-width="3"/>
+            <ellipse cx="25" cy="112" rx="10" ry="3" fill="#64748b"/>
+            <ellipse cx="195" cy="112" rx="10" ry="3" fill="#64748b"/>
+            <!-- Descent engine nozzle -->
+            <polygon points="95,95 125,95 130,108 90,108" fill="#334155"/>
+            <!-- Ascent stage crew cabin -->
+            <rect x="75" y="32" width="70" height="28" rx="6" fill="#475569" stroke="#94a3b8" stroke-width="1.5"/>
+            <!-- Triangular viewport windows -->
+            <polygon points="85,38 95,38 88,46" fill="#00e5ff"/>
+            <polygon points="135,38 125,38 132,46" fill="#00e5ff"/>
+            <!-- Rendezvous radar antenna -->
+            <line x1="110" y1="32" x2="110" y2="15" stroke="#f8fafc" stroke-width="2"/>
+            <circle cx="110" cy="14" r="5" fill="#f59e0b"/>
+            <!-- Egress ladder -->
+            <line x1="65" y1="65" x2="45" y2="108" stroke="#f8fafc" stroke-width="1.5" stroke-dasharray="2,3"/>
+          </svg>
+        `;
+      } else if (type === 'lrv_rover') {
+        return `
+          <svg width="220" height="120" viewBox="0 0 220 120" fill="none">
+            <!-- LRV Chassis frame -->
+            <rect x="50" y="60" width="120" height="15" rx="3" fill="#cbd5e1" stroke="#94a3b8" stroke-width="1.5"/>
+            <!-- Foldable lawn-chair seats -->
+            <rect x="90" y="42" width="16" height="20" rx="2" fill="#475569"/>
+            <rect x="110" y="42" width="16" height="20" rx="2" fill="#475569"/>
+            <!-- T-handle hand controller -->
+            <line x1="108" y1="60" x2="108" y2="48" stroke="#f59e0b" stroke-width="2"/>
+            <line x1="102" y1="48" x2="114" y2="48" stroke="#f59e0b" stroke-width="2"/>
+            <!-- High-gain dish antenna -->
+            <line x1="65" y1="60" x2="65" y2="28" stroke="#94a3b8" stroke-width="2"/>
+            <path d="M50,22 Q65,34 80,22" stroke="#f59e0b" stroke-width="2.5" fill="none"/>
+            <!-- Woven piano-wire mesh wheels -->
+            <circle cx="65" cy="88" r="18" fill="none" stroke="#e2e8f0" stroke-width="3" stroke-dasharray="3,3"/>
+            <circle cx="65" cy="88" r="7" fill="#64748b"/>
+            <circle cx="155" cy="88" r="18" fill="none" stroke="#e2e8f0" stroke-width="3" stroke-dasharray="3,3"/>
+            <circle cx="155" cy="88" r="7" fill="#64748b"/>
+          </svg>
+        `;
+      } else if (type === 'snap27') {
+        return `
+          <svg width="220" height="120" viewBox="0 0 220 120" fill="none">
+            <!-- RTG cylindrical radiator housing -->
+            <rect x="85" y="30" width="50" height="60" rx="4" fill="#1e293b" stroke="#94a3b8" stroke-width="1.5"/>
+            <!-- Heat dissipation fins -->
+            <line x1="75" y1="40" x2="85" y2="40" stroke="#f59e0b" stroke-width="3"/>
+            <line x1="75" y1="55" x2="85" y2="55" stroke="#f59e0b" stroke-width="3"/>
+            <line x1="75" y1="70" x2="85" y2="70" stroke="#f59e0b" stroke-width="3"/>
+            <line x1="135" y1="40" x2="145" y2="40" stroke="#f59e0b" stroke-width="3"/>
+            <line x1="135" y1="55" x2="145" y2="55" stroke="#f59e0b" stroke-width="3"/>
+            <line x1="135" y1="70" x2="145" y2="70" stroke="#f59e0b" stroke-width="3"/>
+            <!-- Plutonium-238 atomic symbol -->
+            <circle cx="110" cy="60" r="12" fill="#78350f" stroke="#f59e0b" stroke-width="1.5"/>
+            <circle cx="110" cy="60" r="3" fill="#fbbf24"/>
+            <!-- Base pallet mounting bracket -->
+            <rect x="70" y="90" width="80" height="12" fill="#475569"/>
+          </svg>
+        `;
+      } else if (type === 'rover_curiosity') {
+        return `
+          <svg width="220" height="120" viewBox="0 0 220 120" fill="none">
+            <!-- Warm electronics box rover body -->
+            <rect x="65" y="55" width="90" height="24" rx="4" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.5"/>
+            <!-- Remote sensing mast & Mastcam / ChemCam -->
+            <line x1="135" y1="55" x2="135" y2="20" stroke="#64748b" stroke-width="3"/>
+            <rect x="127" y="14" width="16" height="10" rx="2" fill="#1e293b" stroke="#f59e0b" stroke-width="1"/>
+            <circle cx="135" cy="19" r="3" fill="#00e5ff"/>
+            <!-- Aft MMRTG nuclear generator -->
+            <rect x="52" y="52" width="16" height="18" fill="#78350f" stroke="#f59e0b" stroke-width="1.5"/>
+            <!-- Forward 5-joint robotic arm with drill -->
+            <polyline points="150,68 175,75 180,88" stroke="#94a3b8" stroke-width="2.5"/>
+            <circle cx="180" cy="88" r="4" fill="#f59e0b"/>
+            <!-- Rocker-Bogie aluminum wheels -->
+            <circle cx="70" cy="94" r="12" fill="#334155" stroke="#94a3b8" stroke-width="2"/>
+            <circle cx="110" cy="94" r="12" fill="#334155" stroke="#94a3b8" stroke-width="2"/>
+            <circle cx="150" cy="94" r="12" fill="#334155" stroke="#94a3b8" stroke-width="2"/>
+          </svg>
+        `;
+      } else if (type === 'helicopter') {
+        return `
+          <svg width="220" height="120" viewBox="0 0 220 120" fill="none">
+            <!-- Counter-rotating carbon fiber rotor blades -->
+            <ellipse cx="110" cy="30" rx="75" ry="4" fill="#334155" stroke="#94a3b8" stroke-width="1"/>
+            <ellipse cx="110" cy="38" rx="75" ry="4" fill="#334155" stroke="#94a3b8" stroke-width="1"/>
+            <!-- Solar panel charging array -->
+            <rect x="96" y="18" width="28" height="6" fill="#1e3a8a" stroke="#60a5fa" stroke-width="1"/>
+            <!-- Central rotor mast -->
+            <line x1="110" y1="24" x2="110" y2="52" stroke="#64748b" stroke-width="2.5"/>
+            <!-- Gold foil cubic fuselage body -->
+            <rect x="98" y="52" width="24" height="24" rx="3" fill="#f59e0b" stroke="#fbbf24" stroke-width="1.5"/>
+            <!-- Carbon-composite landing legs -->
+            <line x1="98" y1="74" x2="70" y2="105" stroke="#94a3b8" stroke-width="2"/>
+            <line x1="122" y1="74" x2="150" y2="105" stroke="#94a3b8" stroke-width="2"/>
+            <circle cx="68" cy="106" r="3" fill="#cbd5e1"/>
+            <circle cx="152" cy="106" r="3" fill="#cbd5e1"/>
+          </svg>
+        `;
+      } else if (type === 'footprint') {
+        return `
+          <svg width="220" height="120" viewBox="0 0 220 120" fill="none">
+            <!-- A7L lunar overshoe tread outline -->
+            <g transform="translate(75, 15) scale(0.85)">
+              <rect x="15" y="15" width="45" height="90" rx="22" fill="#1e293b" stroke="#cbd5e1" stroke-width="2"/>
+              <!-- Chevron ridges left in regolith -->
+              <line x1="22" y1="30" x2="53" y2="30" stroke="#94a3b8" stroke-width="3"/>
+              <line x1="20" y1="42" x2="55" y2="42" stroke="#94a3b8" stroke-width="3"/>
+              <line x1="20" y1="54" x2="55" y2="54" stroke="#94a3b8" stroke-width="3"/>
+              <line x1="20" y1="66" x2="55" y2="66" stroke="#94a3b8" stroke-width="3"/>
+              <line x1="22" y1="78" x2="53" y2="78" stroke="#94a3b8" stroke-width="3"/>
+              <line x1="25" y1="90" x2="50" y2="90" stroke="#94a3b8" stroke-width="3"/>
+            </g>
+          </svg>
+        `;
+      } else if (type === 'lrrr') {
+        return `
+          <svg width="220" height="120" viewBox="0 0 220 120" fill="none">
+            <!-- Angled retroreflector pallet housing -->
+            <polygon points="50,90 170,90 155,40 65,40" fill="#1e293b" stroke="#94a3b8" stroke-width="1.5"/>
+            <!-- Corner-cube fused silica prisms -->
+            ${Array.from({length: 4}).map((_, r) => 
+              Array.from({length: 8}).map((_, c) => 
+                `<circle cx="${75 + c * 10}" cy="${50 + r * 10}" r="3" fill="#00e5ff" stroke="#fff" stroke-width="0.5"/>`
+              ).join('')
+            ).join('')}
+            <!-- Surface support legs -->
+            <line x1="60" y1="90" x2="40" y2="108" stroke="#cbd5e1" stroke-width="2.5"/>
+            <line x1="160" y1="90" x2="180" y2="108" stroke="#cbd5e1" stroke-width="2.5"/>
+          </svg>
+        `;
+      } else if (type === 'volcano') {
+        return `
+          <svg width="220" height="120" viewBox="0 0 220 120" fill="none">
+            <!-- Shield volcano contour -->
+            <polygon points="12,105 75,52 145,52 208,105" fill="#7c2d12" stroke="#ea580c" stroke-width="2"/>
+            <!-- Caldera summit depression -->
+            <ellipse cx="110" cy="52" rx="35" ry="10" fill="#431407" stroke="#f97316" stroke-width="1.5"/>
+            <ellipse cx="110" cy="53" rx="20" ry="5" fill="#1c0702" stroke="#f59e0b" stroke-width="1"/>
+            <!-- Basalt lava flow strata -->
+            <path d="M75,65 Q90,80 85,105" stroke="#ea580c" stroke-width="1.5" stroke-dasharray="3,3"/>
+            <path d="M125,65 Q135,82 145,105" stroke="#ea580c" stroke-width="1.5" stroke-dasharray="3,3"/>
+            <path d="M100,65 Q105,85 110,105" stroke="#f59e0b" stroke-width="1.5"/>
+            <!-- Elevation metric callout -->
+            <line x1="165" y1="30" x2="165" y2="105" stroke="#f8fafc" stroke-width="1" stroke-dasharray="2,2"/>
+            <text x="172" y="42" fill="#f59e0b" font-size="9" font-family="monospace" font-weight="bold">21.9 KM</text>
+            <text x="172" y="53" fill="#94a3b8" font-size="8" font-family="monospace">SUMMIT</text>
+          </svg>
+        `;
+      } else {
+        return `
+          <svg width="220" height="120" viewBox="0 0 220 120" fill="none">
+            <rect x="70" y="30" width="80" height="60" rx="8" fill="#1e293b" stroke="#f59e0b" stroke-width="2"/>
+            <circle cx="110" cy="60" r="16" fill="#0b3d91" stroke="#38bdf8" stroke-width="2"/>
+            <text x="110" y="64" fill="#fff" font-size="10" font-family="monospace" text-anchor="middle" font-weight="bold">NASA</text>
+          </svg>
+        `;
+      }
+    }
+
+    /* ======================================================================
+       E. EDUCATIONAL ENCYCLOPEDIA CURRICULUM (AGES 13-16)
+       ====================================================================== */
+    const NASA_ENCYCLOPEDIA_ARTICLES = {
+      apollo: [
+        {
+          tag: "CREWED TOUCHDOWN // APOLLO 11",
+          title: "Apollo 11: 'The Eagle Has Landed' — Tranquility Base",
+          text: "On July 20, 1969, Commander Neil A. Armstrong and Lunar Module Pilot Edwin 'Buzz' Aldrin Jr. touched down on the Moon in the LM 'Eagle', while Command Module Pilot Michael Collins maintained orbital vigilance in 'Columbia'. The mission fulfilled President John F. Kennedy's national goal before the decade was out and was watched live by over 650 million people across Earth.",
+          table: [
+            ["Touchdown Time", "July 20, 1969 at 20:17:40 UTC (Mare Tranquillitatis, 0.67408° N, 23.47297° E)."],
+            ["1202 & 1201 Alarms", "The Apollo Guidance Computer (AGC) was overloaded with rendezvous radar data; Margaret Hamilton's pioneering asynchronous priority-scheduling software discarded low-priority tasks to keep thruster control online."],
+            ["Manual Boulders Evasion", "Recognizing the computer was steering Eagle into a football-field crater filled with house-sized boulders (West Crater), Armstrong took semi-manual attitude control (P66), flying down-range to land smoothly with under 25 seconds of descent propellant."],
+            ["First Footstep", "July 21, 1969 at 02:56:15 UTC. Neil Armstrong stepped onto the surface: 'That's one small step for [a] man, one giant leap for mankind.' Total EVA duration: 2 hours, 31 minutes, 40 seconds."],
+            ["Scientific Harvest (EASEP)", "Deployed the Early Apollo Scientific Experiments Package: a Passive Seismic Experiment (PSEP) that recorded moonquakes and the Laser Ranging Retroreflector (LRRR). Returned 21.55 kg of pristine lunar rocks and dust."],
+            ["Plaque Inscription", "Affixed to the descent stage ladder: 'Here men from the planet Earth first set foot upon the Moon July 1969, A.D. We came in peace for all mankind.'"]
+          ]
+        },
+        {
+          tag: "CREWED SPACEFLIGHT // NASA",
+          title: "The Saturn V Rocket: The Most Powerful Machine in Human History",
+          text: "Developed under NASA direction at Marshall Space Flight Center in Huntsville, Alabama, the Saturn V stood 110.6 meters (363 feet) tall—taller than the Statue of Liberty—and weighed 2,900 metric tons fully fueled.",
+          table: [
+            ["Stage 1 (S-IC)", "5 Rocketdyne F-1 engines consuming RP-1 kerosene and LOX (34.5 MN of thrust)."],
+            ["Stage 2 (S-II)", "5 J-2 cryogenic engines burning liquid hydrogen and liquid oxygen."],
+            ["Stage 3 (S-IVB)", "1 J-2 engine executing Trans-Lunar Injection (TLI) toward the Moon."],
+            ["Track Record", "13 successful launches between 1967 and 1973 with zero in-flight crew fatalities."]
+          ]
+        },
+        {
+          tag: "LUNAR SURFACE EVAS // TRAVERSE CHRONOLOGY",
+          title: "Extravehicular Activity (EVA): From 2 Hours to Three Full Days on the Moon",
+          text: "Apollo astronauts explored the lunar surface in custom-fitted A7L and A7LB pressure suits equipped with Portable Life Support System (PLSS) backpacks that delivered oxygen, cooling water, and dual radio links.",
+          table: [
+            ["Apollo 11 (1969)", "1 single EVA: 2 hours 31 minutes // Distance: ~1 km // Samples: 21.55 kg // Mare Tranquillitatis (+121 °C to -130 °C)."],
+            ["Apollo 12 (1969)", "2 EVAs: 7 hours 45 minutes // Visited and sampled the robotic Surveyor 3 lander // Oceanus Procellarum."],
+            ["Apollo 15 (1971)", "3 EVAs: 18 hours 35 minutes // Traversed 27.9 km using the LRV // Samples: 77.31 kg // Hadley-Apennine (+107 °C to -135 °C)."],
+            ["Apollo 17 (1972)", "3 EVAs: 22 hours 4 minutes // Traversed 35.9 km using the LRV // Samples: 110.5 kg // Taurus-Littrow Valley."]
+          ]
+        },
+        {
+          tag: "SPACE AUTOMOTIVE ENGINEERING",
+          title: "The Lunar Roving Vehicle (LRV): NASA's Electric Moon Buggy",
+          text: "Built by Boeing and General Motors' Delco Electronics division under contract to NASA, the LRV folded like an origami accordion inside Quadrant 1 of the Lunar Module Falcon's descent stage.",
+          table: [
+            ["Empty Mass", "210 kg (on Earth) / equivalent to only 35 kg on the low-gravity Moon."],
+            ["Top Speed", "18.0 km/h (11.2 mph), set by Gene Cernan during Apollo 17."],
+            ["Batteries", "Dual 36-volt silver-zinc non-rechargeable batteries (121 Ah capacity)."],
+            ["Navigation", "Dead-reckoning directional gyroscopes and odometer computers (no GPS on the Moon)."]
+          ]
+        }
+      ],
+      mars: [
+        {
+          tag: "ATMOSPHERE & GEOMORPHOLOGY",
+          title: "Mars: Planetary Profile, Extreme Weather & Monster Volcanoes",
+          text: "Mars is the fourth planet from the Sun, possessing approximately half the diameter of Earth (6,779 km) and 38% of Earth's surface gravity. Named the Red Planet for the abundant iron(III) oxide (rust) coating its rocks and dust, its atmospheric and geological extremes dwarf any environment on Earth.",
+          table: [
+            ["Atmospheric Composition", "95.32% Carbon Dioxide (CO₂), 2.6% Nitrogen (N₂), 1.9% Argon (Ar), 0.16% Oxygen (O₂), and trace amounts of water vapor and methane."],
+            ["Surface Pressure", "Average 6.1 millibars (610 Pa) — less than 1% of Earth's sea-level pressure. Liquid pure water cannot exist stably on the surface; it boils or sublimates instantly."],
+            ["Temperature Range", "Plunges to -140 °C (-220 °F) during the polar winter night and warms to +20 °C (68 °F) at midday equator. Average surface temperature: -63 °C."],
+            ["Sol & Obliquity", "Martian day (Sol) is 24 hours, 39 minutes, 35.244 seconds. Its axial tilt of 25.19° (nearly identical to Earth's 23.44°) generates four distinct seasons over a 687 Earth-day Martian year."],
+            ["Olympus Mons", "The largest volcano in the Solar System: a shield volcano 21.9 km (72,000 ft) high (nearly triple Mount Everest) spanning 600 km wide with a central caldera 80 km across."],
+            ["Valles Marineris", "A tectonic rift canyon system stretching over 4,000 km long, 200 km wide, and up to 7 km deep — ten times longer and four times deeper than the Grand Canyon of Arizona."],
+            ["Geological Epochs", "Chronologized into three eras: Noachian (4.1 to 3.7 Ga: warmer, thicker atmosphere, heavy cratering, and flowing river networks), Hesperian (3.7 to 3.0 Ga: widespread volcanism and catastrophic flooding channels), and Amazonian (3.0 Ga to present: hyper-arid, cold, wind-driven desert)."]
+          ]
+        },
+        {
+          tag: "TWIN ROVERS // NASA MER",
+          title: "Spirit and Opportunity: Searching for Ancient Water on the Red Planet",
+          text: "Launched by NASA in 2003, the twin Mars Exploration Rovers transformed planetary science. Featuring Rocker-Bogie suspensions and thermal emission spectrometers, they proved that ancient Mars was once warm, wet, and potentially habitable.",
+          table: [
+            ["Spirit (MER-A)", "Operated from 2004 to 2010 in Gusev Crater, traveling 7.7 km."],
+            ["Opportunity (MER-B)", "Operated for over 14 years until June 2018, traveling 45.16 km."],
+            ["Power Architecture", "Triple-junction gallium arsenide solar cells cleaned periodically by Martian dust devils."]
+          ]
+        },
+        {
+          tag: "MODERN ROBOTICS // NASA 2020",
+          title: "Perseverance and Ingenuity: Paving the Path for Mars Sample Return",
+          text: "The Perseverance rover utilizes a 2.1-meter robotic arm tipped with a percussive rotary coring drill to extract chalk-sized rock cylinders. Its aerial companion, Ingenuity, proved that extraterrestrial flight is not only possible, but invaluable for surface exploration.",
+          table: [
+            ["MOXIE Instrument", "Generated over 120 grams of 98% pure breathable oxygen directly from Martian CO2."],
+            ["Sample Tubes", "43 ultra-clean titanium cylinders designed to safely store rock cores for decades."],
+            ["Ingenuity Record", "Completed 72 operational flights, 17.0 km total ground distance, and 24 meters peak altitude."]
+          ]
+        },
+        {
+          tag: "PLANETARY GEOPHYSICS",
+          title: "InSight Lander: Listening to the Deep Heart of Mars",
+          text: "Touching down in November 2018 in Elysium Planitia, InSight deployed its ultra-sensitive dome-shielded SEIS seismometer onto the Martian regolith, cataloging over 1,300 marsquakes and confirming that Mars possesses a large liquid iron-nickel core.",
+          table: [
+            ["Monster Quake", "Magnitude 4.7 marsquake recorded on May 4, 2022 (shook the planet for over 10 hours)."],
+            ["Mission Sunset", "December 2022, following heavy Martian dust accumulation across its solar arrays."]
+          ]
+        }
+      ],
+      deep: [
+        {
+          tag: "INTERSTELLAR EMBISSARY",
+          title: "Pioneer 10: The First Man-Made Craft to Escape into the Deep Stars",
+          text: "Launched on March 2, 1972 from Cape Canaveral, Pioneer 10 achieved historic firsts: the first craft to traverse the Asteroid Belt and the first to transmit close-up imagery of Jupiter's swirling atmospheric cloud belts and Great Red Spot.",
+          table: [
+            ["Furthest Signal", "Transmitted its final telemetry in January 2003 from 12.23 billion kilometers away."],
+            ["Power Plant", "Dual SNAP-19 radioisotope thermoelectric generators fueled by Plutonium-238."],
+            ["Gold Plaque", "Engraved with human figures, 14 galactic pulsars triangulating the Sun, and our Solar System."]
+          ]
+        },
+        {
+          tag: "EXOPLANET HUNTER // NASA AMES",
+          title: "Kepler Space Telescope: Finding Trillions of Worlds Among the Stars",
+          text: "Launched in 2009, Kepler used a 95-megapixel optical sensor array to monitor the brightness of 150,000 main-sequence stars simultaneously. When a planet transits in front of its star, it dims the light by mere hundredths of a percent, revealing its orbit and radius.",
+          table: [
+            ["Discoveries", "More than 2,600 verified exoplanets discovered."],
+            ["Habitable Worlds", "Proved that 20% to 50% of Sun-like stars host small, rocky worlds in their habitable zones."],
+            ["K2 Ingenuity", "Engineers balanced solar radiation pressure against the spacecraft body to stabilize it after reaction wheels failed."]
+          ]
+        },
+        {
+          tag: "ASTEROID ARCHAEOLOGY",
+          title: "Dawn & NEAR Shoemaker: Exploring Planetary Building Blocks",
+          text: "NASA's Dawn was the first spacecraft to orbit two different extraterrestrial bodies: the massive rocky protoplanet Vesta (2011) and the icy dwarf planet Ceres (2015), discovering bright sodium carbonate salt deposits. NEAR Shoemaker executed the historic first soft landing on asteroid Eros in 2001.",
+          table: [
+            ["Dawn Propulsion", "High-efficiency xenon ion electrostatic thrusters powered by 10 kW solar wings."],
+            ["NEAR Touchdown", "Gently touched down onto the surface of asteroid Eros at only 6.4 km/h (4.0 mph)."]
+          ]
+        }
+      ],
+      concepts: [
+        {
+          tag: "LUNAR GEOLOGY & SEISMOLOGY",
+          title: "The Moon: Anorthosite Highlands, Lava Seas & Moonquakes",
+          text: "Born ~4.51 billion years ago following the Giant Impact Hypothesis (a collision between proto-Earth and a Mars-sized body named Theia), the Moon cooled to form a primordial floating crust of white anorthosite before being scarred by asteroid bombardments and volcanic eruptions.",
+          table: [
+            ["Synchronous Tidal Locking", "Earth's gravitational gradient exerted tidal friction on the Moon's rotation until its orbital period and rotational period equalized at exactly 27.32 days, permanently freezing one hemisphere toward Earth."],
+            ["Highlands vs. Maria", "The bright, rugged lunar highlands are dominated by 4.4-billion-year-old anorthosite rock (such as the Genesis Rock collected by Apollo 15). The dark maria are gigantic low-lying impact basins flooded by fluid basaltic lava between 3.0 and 3.8 billion years ago."],
+            ["Thermal Extremes & Cold Traps", "At lunar noon the equatorial surface reaches +121 °C (250 °F); during the two-week night it drops to -130 °C (-202 °F). In Permanently Shadowed Regions (PSRs) within polar craters like Shackleton, temperatures plunge to -246 °C (-410 °F) — cold enough to trap water ice for billions of years."],
+            ["Four Types of Moonquakes", "Recorded by the Apollo ALSEP passive seismic network: (1) Deep moonquakes (~700 km depth induced by tidal flexing); (2) Thermal tremors caused by rapid expansion at sunrise; (3) Meteoroid impact vibrations; and (4) Shallow tectonic quakes (up to magnitude 5.5, lasting over 10 minutes because bone-dry lunar rock rings like a church bell)."]
+          ]
+        },
+        {
+          tag: "PHYSICS // SPACE ENVIRONMENT",
+          title: "Why is the Lunar Sky Pitch Black Even at High Noon?",
+          text: "On Earth, the daytime sky appears bright blue because nitrogen and oxygen molecules scatter high-frequency blue sunlight in all directions (Rayleigh scattering). On the Moon, there is no atmosphere to scatter incoming light; photons travel in pure straight lines. Therefore, even when the Sun blazes overhead, the surrounding sky is deep, infinite void black.",
+          table: [
+            ["Lunar Vacuum", "Surface atmospheric pressure is approximately 3 × 10⁻¹⁵ atmospheres."],
+            ["Consequence", "Zero air means zero wind, sound, rain, or thermal convection; heat transfers solely through conduction and radiation."]
+          ]
+        },
+        {
+          tag: "NUCLEAR ENERGY IN SPACE",
+          title: "What is an RTG and Why Does NASA Use Plutonium-238?",
+          text: "A Radioisotope Thermoelectric Generator (RTG) is not an explosive fission reactor, but rather a solid-state 'nuclear thermal battery'. Plutonium-238 dioxide undergoes natural alpha decay, which releases heat that warms the fuel canister to over 500 °C. Solid-state thermocouples convert this temperature differential directly into electricity via the Seebeck effect with zero moving parts.",
+          table: [
+            ["Half-Life", "Pu-238 has a half-life of 87.7 years, losing just 0.78% of its heat output per year."],
+            ["Strategic Advantage", "Enables rovers like Curiosity and deep probes like Pioneer to operate in total darkness or global dust storms where solar panels fail."]
+          ]
+        },
+        {
+          tag: "PLANETARY GEOLOGY",
+          title: "What is Lunar Regolith and Why Will Footprints Last Forever?",
+          text: "Lunar regolith is a fine layer of pulverized mineral dust, basaltic fragments, and glassy impact spherules blanketed across the Moon. Formed over 4 billion years of micrometeorite bombardment, its grains were never rounded by water or air currents, leaving razor-sharp microscopic edges that lock together like interlocking jigsaw teeth.",
+          table: [
+            ["Suit Hazard", "Sharp regolith grains act like fine abrasive sandpaper, wearing down spacesuit seals and camera lenses during extended EVAs."]
+          ]
+        }
+      ]
+    };
+
+    /* ======================================================================
+       F. MAIN APPLICATION CONTROLLER
+       ====================================================================== */
+    class NasaSpaceApp {
+      constructor() {
+        this.currentScreen = 'launch';
+        this.selectedCelestial = 'mars';
+        this.currentSurface = null;
+
+        // DOM Elements
+        this.screenLaunch = document.getElementById('screen-launch');
+        this.screenSolar = document.getElementById('screen-solar');
+        this.screenSurface = document.getElementById('screen-surface');
+        this.labelHudStatus = document.getElementById('label-hud-status');
+        this.btnBackOrbit = document.getElementById('btn-back-orbit');
+        this.btnAudioMute = document.getElementById('btn-audio-mute');
+        this.iconSoundOn = document.getElementById('icon-sound-on');
+        this.iconSoundOff = document.getElementById('icon-sound-off');
+
+        // Encyclopedia Module
+        this.encyclopediaDrawer = document.getElementById('encyclopedia-drawer');
+        this.btnToggleEnc = document.getElementById('btn-toggle-enc');
+        this.btnCloseEnc = document.getElementById('btn-close-enc');
+        this.encArticlesScroll = document.getElementById('enc-articles-scroll');
+
+        // Graphics Views
+        this.launchView = new NasaLaunchScene('launch-canvas');
+        this.solarView = new NasaSolarOrrery('solar-canvas');
+        this.surfaceView = new NasaSurfaceLandscape();
+
+        this.bindEvents();
+        this.renderEncyclopediaTab('apollo');
+      }
+
+      bindEvents() {
+        // Audio Toggle
+        this.btnAudioMute.addEventListener('click', () => {
+          const state = sound.toggleAudio();
+          this.iconSoundOn.style.display = state ? 'block' : 'none';
+          this.iconSoundOff.style.display = state ? 'none' : 'block';
+          if (state) sound.playTelemetryChirp(1000);
+        });
+
+        // Liftoff Button
+        document.getElementById('btn-start-liftoff').addEventListener('click', () => {
+          this.executeLiftoff();
+        });
+
+        // Return to Orbit Button
+        this.btnBackOrbit.addEventListener('click', () => {
+          sound.playTelemetryChirp(700);
+          this.switchView('solar');
+        });
+
+        // Solar System Navigation Chips
+        document.querySelectorAll('#solar-chips-nav .body-nav-chip').forEach(chip => {
+          chip.addEventListener('click', () => {
+            document.querySelectorAll('#solar-chips-nav .body-nav-chip').forEach(c => c.classList.remove('active'));
+            chip.classList.add('active');
+            const targetId = chip.dataset.id;
+            sound.playTelemetryChirp(820);
+            this.solarView.focusOnTarget(targetId);
+          });
+        });
+
+        // Zoom Controls
+        document.getElementById('btn-zoom-plus').addEventListener('click', () => {
+          sound.playTelemetryChirp(900);
+          this.solarView.adjustZoom(1.28);
+        });
+        document.getElementById('btn-zoom-minus').addEventListener('click', () => {
+          sound.playTelemetryChirp(700);
+          this.solarView.adjustZoom(0.78);
+        });
+
+        // Dive into Surface Button
+        document.getElementById('btn-dive-surface').addEventListener('click', () => {
+          sound.playTelemetryChirp(1100);
+          this.diveIntoSurface(this.selectedCelestial);
+        });
+
+        // Close Celestial Drawer
+        document.getElementById('drawer-close-button').addEventListener('click', () => {
+          sound.playTelemetryChirp(550);
+          document.getElementById('celestial-drawer').classList.remove('open');
+        });
+
+        // Close Inspection Modal
+        document.getElementById('btn-close-modal').addEventListener('click', () => {
+          sound.playTelemetryChirp(550);
+          document.getElementById('inspection-modal').classList.remove('open');
+        });
+
+        // Encyclopedia Toggle
+        this.btnToggleEnc.addEventListener('click', () => {
+          sound.playTelemetryChirp(850);
+          this.encyclopediaDrawer.classList.toggle('open');
+        });
+        this.btnCloseEnc.addEventListener('click', () => {
+          sound.playTelemetryChirp(550);
+          this.encyclopediaDrawer.classList.remove('open');
+        });
+
+        // Encyclopedia Tab Chips
+        document.querySelectorAll('.enc-tab-chip').forEach(btn => {
+          btn.addEventListener('click', () => {
+            document.querySelectorAll('.enc-tab-chip').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            sound.playTelemetryChirp(780);
+            this.renderEncyclopediaTab(btn.dataset.tab);
+          });
+        });
+
+        // Responsive Window Resize
+        window.addEventListener('resize', () => {
+          this.launchView.handleResize();
+          this.solarView.handleResize();
+        });
+      }
+
+      switchView(screenKey) {
+        this.currentScreen = screenKey;
+        [this.screenLaunch, this.screenSolar, this.screenSurface].forEach(s => s.classList.remove('active'));
+
+        if (screenKey === 'launch') {
+          this.screenLaunch.classList.add('active');
+          this.btnBackOrbit.style.display = 'none';
+          this.labelHudStatus.innerText = 'CAPE CANAVERAL // T-0 STANDBY';
+        } else if (screenKey === 'solar') {
+          this.screenSolar.classList.add('active');
+          this.btnBackOrbit.style.display = 'none';
+          this.labelHudStatus.innerText = 'NASA ORBITAL RECON // SOLAR SYSTEM';
+          this.solarView.startLoop();
+        } else if (screenKey === 'surface') {
+          this.screenSurface.classList.add('active');
+          this.btnBackOrbit.style.display = 'inline-flex';
+          const name = this.currentSurface === 'mars' ? 'MARS // JEZERO CRATER (JPL)' : 'THE MOON // HADLEY-APENNINE (APOLLO 15)';
+          this.labelHudStatus.innerText = `SURFACE RECON // ${name}`;
+        }
+      }
+
+      executeLiftoff() {
+        sound.initContext();
+        sound.playRocketIgnition(4.5);
+
+        if (navigator.vibrate) {
+          navigator.vibrate([120, 60, 250, 60, 450]);
+        }
+
+        this.screenLaunch.classList.add('camera-shake-active');
+        this.labelHudStatus.innerText = 'LIFTOFF // SLS MAIN IGNITION';
+
+        this.launchView.startLiftoff(() => {
+          this.screenLaunch.classList.remove('camera-shake-active');
+          this.switchView('solar');
+          setTimeout(() => {
+            this.solarView.selectBody('earth');
+          }, 800);
+        });
+      }
+
+      openBodyDetails(key) {
+        this.selectedCelestial = key;
+        const body = NASA_CELESTIAL_BODIES[key];
+        if (!body) return;
+
+        sound.playBeaconPing();
+        document.getElementById('drawer-tag').innerText = body.tag;
+        document.getElementById('drawer-name').innerText = body.name;
+        document.getElementById('stat-dist').innerText = body.dist;
+        document.getElementById('stat-grav').innerText = body.grav;
+        document.getElementById('stat-diam').innerText = body.diam;
+        document.getElementById('drawer-narrative').innerText = body.narrative;
+
+        const missionsCont = document.getElementById('drawer-missions-row');
+        missionsCont.innerHTML = '';
+        body.missions.forEach(m => {
+          const span = document.createElement('span');
+          span.className = 'mission-pill';
+          span.innerText = m;
+          missionsCont.appendChild(span);
+        });
+
+        const diveBtn = document.getElementById('btn-dive-surface');
+        if (body.hasSurface) {
+          diveBtn.style.display = 'inline-flex';
+          diveBtn.querySelector('span').innerText = `EXPLORE SURFACE OF ${body.name.toUpperCase()}`;
+        } else {
+          diveBtn.style.display = 'none';
+        }
+
+        document.getElementById('celestial-drawer').classList.add('open');
+      }
+
+      diveIntoSurface(bodyKey) {
+        document.getElementById('celestial-drawer').classList.remove('open');
+        this.currentSurface = bodyKey === 'moon' ? 'moon' : 'mars';
+        this.surfaceView.setupScenario(this.currentSurface);
+        this.switchView('surface');
+      }
+
+      renderEncyclopediaTab(tabKey) {
+        const articles = NASA_ENCYCLOPEDIA_ARTICLES[tabKey] || [];
+        this.encArticlesScroll.innerHTML = '';
+
+        articles.forEach(art => {
+          const card = document.createElement('div');
+          card.className = 'enc-card';
+
+          let tableHtml = '';
+          if (art.table && art.table.length > 0) {
+            tableHtml = '<table class="enc-table">';
+            art.table.forEach(([k, v]) => {
+              tableHtml += `<tr><td>${k}</td><td>${v}</td></tr>`;
+            });
+            tableHtml += '</table>';
+          }
+
+          card.innerHTML = `
+            <div class="tag">${art.tag}</div>
+            <h4>${art.title}</h4>
+            <p>${art.text}</p>
+            ${tableHtml}
+          `;
+          this.encArticlesScroll.appendChild(card);
+        });
+      }
+    }
+
+    /* ======================================================================
+       G. SCREEN 1: NASA SLS LIFTOFF VISUAL ENGINE (CANVAS 2D)
+       ====================================================================== */
+    class NasaLaunchScene {
+      constructor(canvasId) {
+        this.canvas = document.getElementById(canvasId);
+        this.ctx = this.canvas.getContext('2d');
+        this.particles = [];
+        this.stars = [];
+        this.rocketY = 0;
+        this.rocketV = 0;
+        this.isLaunching = false;
+        this.altKm = 0;
+        this.onFinishCallback = null;
+
+        this.handleResize();
+        this.initStars();
+        this.renderLoop();
+      }
+
+      handleResize() {
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+        if (!this.isLaunching) {
+          this.rocketY = this.canvas.height * 0.63;
+        }
+      }
+
+      initStars() {
+        this.stars = [];
+        for (let i = 0; i < 150; i++) {
+          this.stars.push({
+            x: Math.random() * window.innerWidth,
+            y: Math.random() * window.innerHeight,
+            size: Math.random() * 1.8 + 0.5,
+            alpha: Math.random() * 0.8 + 0.2
+          });
+        }
+      }
+
+      startLiftoff(callback) {
+        this.isLaunching = true;
+        this.rocketV = 0.9;
+        this.onFinishCallback = callback;
+      }
+
+      renderLoop() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        // Atmospheric to space color transition
+        const progress = Math.min(this.altKm / 120, 1);
+        const skyGradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
+
+        if (progress < 0.5) {
+          skyGradient.addColorStop(0, '#060d21');
+          skyGradient.addColorStop(0.7, '#132145');
+          skyGradient.addColorStop(1, '#2c1e28');
+        } else {
+          skyGradient.addColorStop(0, '#020409');
+          skyGradient.addColorStop(1, '#091329');
+        }
+        this.ctx.fillStyle = skyGradient;
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        // Stars
+        this.stars.forEach(s => {
+          this.ctx.fillStyle = `rgba(255, 255, 255, ${s.alpha * (0.3 + progress * 0.7)})`;
+          this.ctx.beginPath();
+          this.ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+          this.ctx.fill();
+        });
+
+        // Launchpad and gantry service tower
+        const groundY = this.canvas.height * 0.76 + (this.isLaunching ? this.altKm * 5.5 : 0);
+        if (groundY < this.canvas.height + 220) {
+          this.drawPad(groundY);
+        }
+
+        // Volumetric smoke and fire plumes
+        if (this.isLaunching || Math.random() < 0.25) {
+          const count = this.isLaunching ? 9 : 2;
+          for (let i = 0; i < count; i++) {
+            this.particles.push({
+              x: this.canvas.width / 2 + (Math.random() - 0.5) * 32,
+              y: this.rocketY + 92,
+              vx: (Math.random() - 0.5) * (this.isLaunching ? 7 : 1.5),
+              vy: Math.random() * (this.isLaunching ? 8 : 2) + 5,
+              radius: Math.random() * (this.isLaunching ? 20 : 6) + 5,
+              type: Math.random() > 0.4 ? 'fire' : 'smoke',
+              life: 1,
+              decay: Math.random() * 0.035 + 0.02
+            });
+          }
+        }
+
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+          const p = this.particles[i];
+          p.x += p.vx;
+          p.y += p.vy;
+          p.radius += 0.5;
+          p.life -= p.decay;
+
+          if (p.life <= 0) {
+            this.particles.splice(i, 1);
+            continue;
+          }
+
+          if (p.type === 'fire') {
+            this.ctx.fillStyle = `rgba(245, 158, 11, ${p.life * 0.85})`;
+          } else {
+            this.ctx.fillStyle = `rgba(148, 163, 184, ${p.life * 0.5})`;
+          }
+          this.ctx.beginPath();
+          this.ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+          this.ctx.fill();
+        }
+
+        // Draw NASA Space Launch System (SLS)
+        this.drawNasaSLS(this.canvas.width / 2, this.rocketY);
+
+        if (this.isLaunching) {
+          this.rocketV += 0.17;
+          this.rocketY -= this.rocketV;
+          this.altKm += this.rocketV * 0.4;
+
+          if (this.rocketY < -240 && this.onFinishCallback) {
+            const cb = this.onFinishCallback;
+            this.onFinishCallback = null;
+            setTimeout(() => cb(), 300);
+          }
+        }
+
+        requestAnimationFrame(() => this.renderLoop());
+      }
+
+      drawPad(y) {
+        const cx = this.canvas.width / 2;
+        this.ctx.fillStyle = '#1e2638';
+        this.ctx.fillRect(cx - 120, y, 240, 80);
+
+        this.ctx.strokeStyle = '#475569';
+        this.ctx.lineWidth = 3;
+        this.ctx.strokeRect(cx + 45, y - 200, 45, 200);
+
+        for (let gy = y - 180; gy < y; gy += 30) {
+          this.ctx.beginPath();
+          this.ctx.moveTo(cx + 45, gy);
+          this.ctx.lineTo(cx + 90, gy + 30);
+          this.ctx.stroke();
+        }
+
+        this.ctx.fillStyle = '#f59e0b';
+        this.ctx.beginPath();
+        this.ctx.arc(cx - 100, y + 10, 4, 0, Math.PI * 2);
+        this.ctx.arc(cx + 100, y + 10, 4, 0, Math.PI * 2);
+        this.ctx.fill();
+      }
+
+      drawNasaSLS(x, y) {
+        this.ctx.save();
+        this.ctx.translate(x, y);
+
+        // Core Stage (Cryogenic orange insulation foam)
+        this.ctx.fillStyle = '#ea580c';
+        this.ctx.fillRect(-14, -20, 28, 95);
+
+        // Inter-stage white rings
+        this.ctx.fillStyle = '#f8fafc';
+        this.ctx.fillRect(-14, 0, 28, 8);
+        this.ctx.fillRect(-14, 40, 28, 6);
+
+        // Orion capsule & Launch Abort System (LAS) tower
+        this.ctx.fillStyle = '#f8fafc';
+        this.ctx.beginPath();
+        this.ctx.moveTo(0, -75);
+        this.ctx.lineTo(2, -45);
+        this.ctx.lineTo(12, -20);
+        this.ctx.lineTo(-12, -20);
+        this.ctx.lineTo(-2, -45);
+        this.ctx.closePath();
+        this.ctx.fill();
+
+        // Blue NASA insignia emblem
+        this.ctx.fillStyle = '#0b3d91';
+        this.ctx.beginPath();
+        this.ctx.arc(0, 20, 4.5, 0, Math.PI * 2);
+        this.ctx.fill();
+
+        // Twin Solid Rocket Boosters (SRBs)
+        const drawBooster = (bx) => {
+          this.ctx.fillStyle = '#f1f5f9';
+          this.ctx.beginPath();
+          this.ctx.moveTo(bx, -25);
+          this.ctx.lineTo(bx + 7, -10);
+          this.ctx.lineTo(bx + 7, 75);
+          this.ctx.lineTo(bx - 7, 75);
+          this.ctx.lineTo(bx - 7, -10);
+          this.ctx.closePath();
+          this.ctx.fill();
+
+          this.ctx.fillStyle = '#0f172a';
+          this.ctx.fillRect(bx - 7, 10, 14, 3);
+          this.ctx.fillRect(bx - 7, 40, 14, 3);
+        };
+
+        drawBooster(-21);
+        drawBooster(21);
+
+        // 4x RS-25 engine cluster
+        this.ctx.fillStyle = '#334155';
+        this.ctx.fillRect(-10, 75, 20, 10);
+
+        // Exhaust thrust fire
+        if (this.isLaunching) {
+          this.ctx.fillStyle = '#fbbf24';
+          this.ctx.beginPath();
+          this.ctx.moveTo(-10, 85);
+          this.ctx.lineTo(0, 145 + Math.random() * 25);
+          this.ctx.lineTo(10, 85);
+          this.ctx.closePath();
+          this.ctx.fill();
+
+          const drawBoosterFlame = (bx) => {
+            this.ctx.fillStyle = '#f59e0b';
+            this.ctx.beginPath();
+            this.ctx.moveTo(bx - 5, 75);
+            this.ctx.lineTo(bx, 115 + Math.random() * 15);
+            this.ctx.lineTo(bx + 5, 75);
+            this.ctx.closePath();
+            this.ctx.fill();
+          };
+          drawBoosterFlame(-21);
+          drawBoosterFlame(21);
+        }
+
+        this.ctx.restore();
+      }
+    }
+
+    /* ======================================================================
+       H. SCREEN 2: PHOTOREALISTIC SOLAR SYSTEM ORRERY
+       ====================================================================== */
+    class NasaSolarOrrery {
+      constructor(canvasId) {
+        this.canvas = document.getElementById(canvasId);
+        this.ctx = this.canvas.getContext('2d');
+        this.active = false;
+
+        this.cam = { x: 0, y: 0, scale: 0.95 };
+        this.dragging = false;
+        this.dragOrigin = { x: 0, y: 0 };
+        this.lastTouchDist = 0;
+        this.orbitTime = 0;
+
+        this.backgroundStars = [];
+        this.asteroidBelt = [];
+
+        this.handleResize();
+        this.initStarfield();
+        this.bindUserGestures();
+      }
+
+      handleResize() {
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+        this.cam.x = this.canvas.width / 2;
+        this.cam.y = this.canvas.height / 2;
+      }
+
+      initStarfield() {
+        this.backgroundStars = [];
+        for (let i = 0; i < 340; i++) {
+          this.backgroundStars.push({
+            x: (Math.random() - 0.5) * 3500,
+            y: (Math.random() - 0.5) * 3500,
+            r: Math.random() * 1.6 + 0.4,
+            a: Math.random() * 0.7 + 0.3
+          });
+        }
+
+        this.asteroidBelt = [];
+        for (let i = 0; i < 220; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const dist = 275 + (Math.random() - 0.5) * 48;
+          this.asteroidBelt.push({
+            angle: angle,
+            dist: dist,
+            speed: (Math.random() * 0.002 + 0.001),
+            size: Math.random() * 2.2 + 0.8
+          });
+        }
+      }
+
+      bindUserGestures() {
+        this.canvas.addEventListener('mousedown', (e) => {
+          this.dragging = true;
+          this.dragOrigin = { x: e.clientX - this.cam.x, y: e.clientY - this.cam.y };
+        });
+
+        window.addEventListener('mousemove', (e) => {
+          if (!this.dragging) return;
+          this.cam.x = e.clientX - this.dragOrigin.x;
+          this.cam.y = e.clientY - this.dragOrigin.y;
+        });
+
+        window.addEventListener('mouseup', () => {
+          this.dragging = false;
+        });
+
+        this.canvas.addEventListener('wheel', (e) => {
+          e.preventDefault();
+          const zoomRatio = e.deltaY < 0 ? 1.15 : 0.88;
+          this.adjustZoom(zoomRatio);
+        }, { passive: false });
+
+        this.canvas.addEventListener('touchstart', (e) => {
+          if (e.touches.length === 1) {
+            this.dragging = true;
+            this.dragOrigin = {
+              x: e.touches[0].clientX - this.cam.x,
+              y: e.touches[0].clientY - this.cam.y
+            };
+          } else if (e.touches.length === 2) {
+            this.dragging = false;
+            this.lastTouchDist = Math.hypot(
+              e.touches[0].clientX - e.touches[1].clientX,
+              e.touches[0].clientY - e.touches[1].clientY
+            );
+          }
+        });
+
+        this.canvas.addEventListener('touchmove', (e) => {
+          if (e.touches.length === 1 && this.dragging) {
+            this.cam.x = e.touches[0].clientX - this.dragOrigin.x;
+            this.cam.y = e.touches[0].clientY - this.dragOrigin.y;
+          } else if (e.touches.length === 2) {
+            const currentDist = Math.hypot(
+              e.touches[0].clientX - e.touches[1].clientX,
+              e.touches[0].clientY - e.touches[1].clientY
+            );
+            if (this.lastTouchDist > 0) {
+              const factor = currentDist / this.lastTouchDist;
+              this.adjustZoom(factor);
+            }
+            this.lastTouchDist = currentDist;
+          }
+        }, { passive: true });
+
+        this.canvas.addEventListener('touchend', () => {
+          this.dragging = false;
+          this.lastTouchDist = 0;
+        });
+
+        this.canvas.addEventListener('click', (e) => {
+          this.resolveRaycast(e.clientX, e.clientY);
+        });
+      }
+
+      adjustZoom(factor) {
+        this.cam.scale = Math.min(Math.max(this.cam.scale * factor, 0.35), 3.4);
+      }
+
+      focusOnTarget(key) {
+        if (key === 'all') {
+          this.cam.x = this.canvas.width / 2;
+          this.cam.y = this.canvas.height / 2;
+          this.cam.scale = 0.95;
+          return;
+        }
+
+        const body = NASA_CELESTIAL_BODIES[key];
+        if (!body) return;
+
+        const angle = this.orbitTime * body.speed;
+        const bx = Math.cos(angle) * body.orbitRadius;
+        const by = Math.sin(angle) * body.orbitRadius;
+
+        this.cam.x = this.canvas.width / 2 - bx * 1.5;
+        this.cam.y = this.canvas.height / 2 - by * 1.5;
+        this.cam.scale = 1.65;
+
+        app.openBodyDetails(key);
+      }
+
+      selectBody(key) {
+        this.focusOnTarget(key);
+      }
+
+      resolveRaycast(screenX, screenY) {
+        const worldX = (screenX - this.cam.x) / this.cam.scale;
+        const worldY = (screenY - this.cam.y) / this.cam.scale;
+
+        for (const [key, body] of Object.entries(NASA_CELESTIAL_BODIES)) {
+          let bx = 0;
+          let by = 0;
+          if (body.orbitRadius > 0) {
+            const angle = this.orbitTime * body.speed;
+            bx = Math.cos(angle) * body.orbitRadius;
+            by = Math.sin(angle) * body.orbitRadius;
+          }
+
+          const dist = Math.hypot(worldX - bx, worldY - by);
+          const hitRadius = Math.max(body.radius * 1.6, 26);
+
+          if (dist <= hitRadius) {
+            app.openBodyDetails(key);
+            return;
+          }
+        }
+      }
+
+      startLoop() {
+        if (!this.active) {
+          this.active = true;
+          this.drawFrame();
+        }
+      }
+
+      drawFrame() {
+        if (!this.active) return;
+        this.orbitTime += 1;
+
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        // Void background
+        this.ctx.fillStyle = '#010308';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        this.ctx.save();
+        this.ctx.translate(this.cam.x, this.cam.y);
+        this.ctx.scale(this.cam.scale, this.cam.scale);
+
+        // Starfield
+        this.backgroundStars.forEach(s => {
+          this.ctx.fillStyle = `rgba(255, 255, 255, ${s.a})`;
+          this.ctx.beginPath();
+          this.ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+          this.ctx.fill();
+        });
+
+        // Orbital ellipses
+        for (const [key, body] of Object.entries(NASA_CELESTIAL_BODIES)) {
+          if (body.orbitRadius > 0) {
+            this.ctx.strokeStyle = 'rgba(148, 163, 184, 0.16)';
+            this.ctx.lineWidth = 1 / this.cam.scale;
+            this.ctx.setLineDash([4, 4]);
+            this.ctx.beginPath();
+            this.ctx.arc(0, 0, body.orbitRadius, 0, Math.PI * 2);
+            this.ctx.stroke();
+            this.ctx.setLineDash([]);
+          }
+        }
+
+        // Asteroid belt
+        this.ctx.fillStyle = 'rgba(148, 163, 184, 0.55)';
+        this.asteroidBelt.forEach(ast => {
+          ast.angle += ast.speed;
+          const ax = Math.cos(ast.angle) * ast.dist;
+          const ay = Math.sin(ast.angle) * ast.dist;
+          this.ctx.beginPath();
+          this.ctx.arc(ax, ay, ast.size, 0, Math.PI * 2);
+          this.ctx.fill();
+        });
+
+        // Draw planets with 3D sphere shading
+        for (const [key, body] of Object.entries(NASA_CELESTIAL_BODIES)) {
+          let bx = 0;
+          let by = 0;
+          if (body.orbitRadius > 0) {
+            const angle = this.orbitTime * body.speed;
+            bx = Math.cos(angle) * body.orbitRadius;
+            by = Math.sin(angle) * body.orbitRadius;
+          }
+
+          this.drawPhotorealisticPlanet(bx, by, body);
+
+          // Clean NASA typography label
+          this.ctx.fillStyle = '#cbd5e1';
+          this.ctx.font = '10px monospace';
+          this.ctx.textAlign = 'center';
+          this.ctx.fillText(body.name.toUpperCase(), bx, by + body.radius + 15);
+        }
+
+        this.ctx.restore();
+        requestAnimationFrame(() => this.drawFrame());
+      }
+
+      drawPhotorealisticPlanet(bx, by, body) {
+        this.ctx.save();
+        this.ctx.translate(bx, by);
+
+        const r = body.radius;
+
+        if (body.textureType === 'sun') {
+          const corona = this.ctx.createRadialGradient(0, 0, r * 0.4, 0, 0, r * 2.2);
+          corona.addColorStop(0, '#fffbeb');
+          corona.addColorStop(0.3, '#f59e0b');
+          corona.addColorStop(0.8, 'rgba(217, 119, 6, 0.25)');
+          corona.addColorStop(1, 'rgba(0,0,0,0)');
+          this.ctx.fillStyle = corona;
+          this.ctx.beginPath();
+          this.ctx.arc(0, 0, r * 2.2, 0, Math.PI * 2);
+          this.ctx.fill();
+
+          this.ctx.fillStyle = '#fbbf24';
+          this.ctx.beginPath();
+          this.ctx.arc(0, 0, r, 0, Math.PI * 2);
+          this.ctx.fill();
+
+        } else if (body.textureType === 'earth') {
+          const sphereGrad = this.ctx.createRadialGradient(-r * 0.3, -r * 0.3, r * 0.1, 0, 0, r);
+          sphereGrad.addColorStop(0, '#60a5fa');
+          sphereGrad.addColorStop(0.5, '#1d4ed8');
+          sphereGrad.addColorStop(1, '#0f172a');
+          this.ctx.fillStyle = sphereGrad;
+          this.ctx.beginPath();
+          this.ctx.arc(0, 0, r, 0, Math.PI * 2);
+          this.ctx.fill();
+
+          this.ctx.fillStyle = '#15803d';
+          this.ctx.beginPath();
+          this.ctx.arc(-2, -1, r * 0.5, 0, Math.PI * 1.4);
+          this.ctx.fill();
+
+          this.ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+          this.ctx.beginPath();
+          this.ctx.ellipse(1, -2, r * 0.7, r * 0.25, 0.4, 0, Math.PI * 2);
+          this.ctx.fill();
+
+          this.ctx.strokeStyle = 'rgba(56, 189, 248, 0.6)';
+          this.ctx.lineWidth = 1.5;
+          this.ctx.stroke();
+
+        } else if (body.textureType === 'moon') {
+          const moonGrad = this.ctx.createRadialGradient(-r * 0.3, -r * 0.3, r * 0.1, 0, 0, r);
+          moonGrad.addColorStop(0, '#f1f5f9');
+          moonGrad.addColorStop(0.7, '#64748b');
+          moonGrad.addColorStop(1, '#1e293b');
+          this.ctx.fillStyle = moonGrad;
+          this.ctx.beginPath();
+          this.ctx.arc(0, 0, r, 0, Math.PI * 2);
+          this.ctx.fill();
+
+          this.ctx.fillStyle = 'rgba(30, 41, 59, 0.65)';
+          this.ctx.beginPath();
+          this.ctx.arc(-1, -1, r * 0.35, 0, Math.PI * 2);
+          this.ctx.arc(2, 2, r * 0.25, 0, Math.PI * 2);
+          this.ctx.fill();
+
+        } else if (body.textureType === 'mars') {
+          const marsGrad = this.ctx.createRadialGradient(-r * 0.3, -r * 0.3, r * 0.1, 0, 0, r);
+          marsGrad.addColorStop(0, '#f97316');
+          marsGrad.addColorStop(0.6, '#c2410c');
+          marsGrad.addColorStop(1, '#431407');
+          this.ctx.fillStyle = marsGrad;
+          this.ctx.beginPath();
+          this.ctx.arc(0, 0, r, 0, Math.PI * 2);
+          this.ctx.fill();
+
+          this.ctx.fillStyle = '#f8fafc';
+          this.ctx.beginPath();
+          this.ctx.ellipse(0, -r + 2, r * 0.4, r * 0.18, 0, 0, Math.PI * 2);
+          this.ctx.fill();
+
+          this.ctx.strokeStyle = '#290e05';
+          this.ctx.lineWidth = 1.8;
+          this.ctx.beginPath();
+          this.ctx.moveTo(-r * 0.6, 1);
+          this.ctx.lineTo(r * 0.5, 3);
+          this.ctx.stroke();
+
+        } else if (body.textureType === 'jupiter') {
+          const jupGrad = this.ctx.createRadialGradient(-r * 0.3, -r * 0.3, r * 0.1, 0, 0, r);
+          jupGrad.addColorStop(0, '#fed7aa');
+          jupGrad.addColorStop(0.7, '#c2410c');
+          jupGrad.addColorStop(1, '#451a03');
+          this.ctx.fillStyle = jupGrad;
+          this.ctx.beginPath();
+          this.ctx.arc(0, 0, r, 0, Math.PI * 2);
+          this.ctx.fill();
+
+          this.ctx.strokeStyle = 'rgba(124, 45, 18, 0.7)';
+          this.ctx.lineWidth = 2.5;
+          this.ctx.beginPath();
+          this.ctx.moveTo(-r * 0.85, -6);
+          this.ctx.lineTo(r * 0.85, -6);
+          this.ctx.moveTo(-r * 0.95, 2);
+          this.ctx.lineTo(r * 0.95, 2);
+          this.ctx.moveTo(-r * 0.85, 9);
+          this.ctx.lineTo(r * 0.85, 9);
+          this.ctx.stroke();
+
+          this.ctx.fillStyle = '#b91c1c';
+          this.ctx.beginPath();
+          this.ctx.ellipse(6, 6, 4.5, 3, 0.1, 0, Math.PI * 2);
+          this.ctx.fill();
+
+        } else {
+          const genGrad = this.ctx.createRadialGradient(-r * 0.3, -r * 0.3, r * 0.1, 0, 0, r);
+          genGrad.addColorStop(0, body.color);
+          genGrad.addColorStop(1, '#0f172a');
+          this.ctx.fillStyle = genGrad;
+          this.ctx.beginPath();
+          this.ctx.arc(0, 0, r, 0, Math.PI * 2);
+          this.ctx.fill();
+        }
+
+        this.ctx.restore();
+      }
+    }
+
+    /* ======================================================================
+       I. SCREEN 3: PHOTOREALISTIC SURFACE PANORAMAS (MARS & MOON)
+       ====================================================================== */
+    class NasaSurfaceLandscape {
+      constructor() {
+        this.viewport = document.getElementById('surface-pan-viewport');
+        this.strip = document.getElementById('surface-strip-el');
+        this.canvas = document.getElementById('surface-canvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.hotspotsLayer = document.getElementById('surface-hotspots-layer');
+        this.lunarHud = document.getElementById('surface-telem-panel');
+
+        this.currentBody = 'mars';
+        this.panOffsetX = 0;
+        this.isPanning = false;
+        this.panTouchStartX = 0;
+        this.panStartOffset = 0;
+
+        this.initPanGestures();
+      }
+
+      setupScenario(scenarioKey) {
+        this.currentBody = scenarioKey;
+        this.panOffsetX = -240;
+        this.applyPanTransform();
+
+        const bgFile = scenarioKey === 'moon' ? 'moon_bg.jpg' : 'mars_bg.jpg';
+	// Seleccionar fotografía real de cada superficie
+	this.strip.style.backgroundImage = "none";
+	this.strip.style.backgroundColor = "#050505";
+        const telemPanel = document.getElementById('surface-telem-panel');
+        if (telemPanel) {
+          telemPanel.style.display = 'block';
+          if (scenarioKey === 'moon') {
+            document.getElementById('telem-header-title').innerText = 'NASA TELEMETRY // ALSEP (THE MOON)';
+            document.getElementById('telem-temp-val').innerText = '-130 °C (Night) / +121 °C (Noon)';
+            document.getElementById('telem-grav-val').innerText = '1.622 m/s² (0.166 g)';
+            document.getElementById('telem-press-val').innerText = '3 × 10⁻¹⁵ atm (Hard Vacuum)';
+            document.getElementById('telem-cycle-lbl').innerText = 'Diurnal Cycle:';
+            document.getElementById('telem-cycle-val').innerText = '27.3 Earth Days (Locked)';
+            document.getElementById('telem-rad-val').innerText = '1.32 mSv/day (Unshielded)';
+          } else {
+            document.getElementById('telem-header-title').innerText = 'NASA TELEMETRY // REMS & INSIGHT (MARS)';
+            document.getElementById('telem-temp-val').innerText = '-63 °C (Mean) [-140 °C to +20 °C]';
+            document.getElementById('telem-grav-val').innerText = '3.720 m/s² (0.379 g)';
+            document.getElementById('telem-press-val').innerText = '6.1 mbar (95.3% CO₂)';
+            document.getElementById('telem-cycle-lbl').innerText = 'Diurnal Sol:';
+            document.getElementById('telem-cycle-val').innerText = '24h 39m 35s (1 Sol)';
+            document.getElementById('telem-rad-val').innerText = '0.67 mSv/day (MSL RAD)';
+          }
+        }
+
+        this.paintBackgroundPanorama();
+        this.generateHotspots();
+      }
+
+      initPanGestures() {
+        this.viewport.addEventListener('mousedown', (e) => {
+          this.isPanning = true;
+          this.panTouchStartX = e.clientX;
+          this.panStartOffset = this.panOffsetX;
+        });
+
+        window.addEventListener('mousemove', (e) => {
+          if (!this.isPanning) return;
+          const delta = e.clientX - this.panTouchStartX;
+          this.setPan(this.panStartOffset + delta);
+        });
+
+        window.addEventListener('mouseup', () => {
+          this.isPanning = false;
+        });
+
+        this.viewport.addEventListener('touchstart', (e) => {
+          if (e.touches.length === 1) {
+            this.isPanning = true;
+            this.panTouchStartX = e.touches[0].clientX;
+            this.panStartOffset = this.panOffsetX;
+          }
+        }, { passive: true });
+
+        this.viewport.addEventListener('touchmove', (e) => {
+          if (!this.isPanning || e.touches.length !== 1) return;
+          const delta = e.touches[0].clientX - this.panTouchStartX;
+          this.setPan(this.panStartOffset + delta);
+        }, { passive: true });
+
+        this.viewport.addEventListener('touchend', () => {
+          this.isPanning = false;
+        });
+      }
+
+      setPan(val) {
+        const minVal = -(3400 - window.innerWidth);
+        const maxVal = 0;
+        this.panOffsetX = Math.min(Math.max(val, minVal), maxVal);
+        this.applyPanTransform();
+      }
+
+      applyPanTransform() {
+        this.strip.style.transform = `translateX(${this.panOffsetX}px)`;
+      }
+
+paintBackgroundPanorama() {
+    const w = 3400;
+    const h = window.innerHeight;
+
+    this.canvas.width = w;
+    this.canvas.height = h;
+
+    const ctx = this.ctx;
+
+    // Fondo de seguridad
+    ctx.fillStyle = "#050505";
+    ctx.fillRect(0, 0, w, h);
+
+    // Fotografías de NASA
+    const imageURL = this.currentBody === 'moon'
+       ? 'https://images-assets.nasa.gov/image/as08-14-2383/as08-14-2383~orig.jpg'
+       : 'https://images-assets.nasa.gov/image/PIA05049/PIA05049~orig.jpg';
+
+    const img = new Image();
+
+    img.onload = () => {
+
+       // Evitar dibujar una imagen de otro planeta
+       if (!this.canvas || !this.ctx) return;
+
+       const canvasRatio = w / h;
+       const imageRatio = img.width / img.height;
+
+       let sx = 0;
+       let sy = 0;
+       let sw = img.width;
+       let sh = img.height;
+
+       // Recortar sin deformar la fotografía
+       if (imageRatio > canvasRatio) {
+            sw = img.height * canvasRatio;
+            sx = (img.width - sw) / 2;
+        } else {
+            sh = img.width / canvasRatio;
+            sy = (img.height - sh) / 2;
+        }
+
+        ctx.clearRect(0, 0, w, h);
+
+        ctx.drawImage(
+            img,
+            sx, sy, sw, sh,
+            0, 0, w, h
+        );
+
+        // Oscurecimiento suave para mantener visibles los elementos
+        const gradient = ctx.createLinearGradient(0, 0, 0, h);
+
+        gradient.addColorStop(0, "rgba(0,0,0,0.05)");
+        gradient.addColorStop(1, "rgba(0,0,0,0.25)");
+
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, w, h);
+    };
+
+    img.onerror = () => {
+        console.error("Error al cargar el panorama:", imageURL);
+    };
+
+    img.src = imageURL;
+}
+      generateHotspots() {
+        this.hotspotsLayer.innerHTML = '';
+        const items = NASA_SURFACE_HOTSPOTS[this.currentBody] || [];
+        const h = window.innerHeight;
+
+        items.forEach(item => {
+          const pin = document.createElement('div');
+          pin.className = 'archaeo-hotspot';
+          pin.style.left = `${item.x}px`;
+          const topY = item.yRatio ? Math.round(h * item.yRatio) : item.y;
+          pin.style.top = `${topY}px`;
+
+          pin.innerHTML = `
+            <div class="hotspot-radar-wave"></div>
+            <div class="hotspot-center-dot"></div>
+            <div class="hotspot-tag">${item.name}</div>
+          `;
+
+          pin.addEventListener('click', () => {
+            sound.playBeaconPing();
+            this.openTechnicalInspection(item);
+          });
+
+          this.hotspotsLayer.appendChild(pin);
+        });
+      }
+
+      openTechnicalInspection(item) {
+        document.getElementById('modal-schematic-box').innerHTML = getSchematicSVG(item.iconType);
+        document.getElementById('modal-tag-el').innerText = item.category;
+        document.getElementById('modal-title-el').innerText = item.name;
+        document.getElementById('modal-year-el').innerText = item.year;
+        document.getElementById('modal-coords-el').innerText = item.coords;
+        document.getElementById('modal-crew-el').innerText = item.crew;
+        document.getElementById('modal-prop-el').innerText = item.prop;
+        document.getElementById('modal-didactic-el').innerText = item.didactic;
+        document.getElementById('modal-desc-el').innerText = item.desc;
+
+        document.getElementById('inspection-modal').classList.add('open');
+      }
+    }
+
+    // Initialize application upon DOM load
+    let app = null;
+    window.addEventListener('DOMContentLoaded', () => {
+      app = new NasaSpaceApp();
+    });
+  </script>
+</body>
+</html>
